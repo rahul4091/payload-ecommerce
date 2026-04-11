@@ -4,9 +4,13 @@ import path from 'path'
 import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
 import sharp from 'sharp'
-
+import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
+import Products from './collections/Products'
+import Categories from './collections/Categories'
+import Customers from './collections/Customers'
+import Orders from './collections/Orders'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -18,7 +22,19 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Users, Media],
+  email: nodemailerAdapter({
+  defaultFromAddress: process.env.EMAIL_FROM || 'noreply@mystore.com',
+  defaultFromName: 'My Store',
+  transportOptions: {
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT) || 2525,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  },
+}),
+  collections: [Users, Media, Products, Categories, Customers, Orders],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
