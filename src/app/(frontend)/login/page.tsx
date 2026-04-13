@@ -12,19 +12,24 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
-  const handleLogin = async () => {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()  // ← prevent page reload
     setLoading(true)
     setError('')
 
-    const data = await login(email, password)
+    try {
+      const data = await login(email, password)
 
-    if (data.token) {
-      // Save token and user to localStorage
-      localStorage.setItem('token', data.token)
-      localStorage.setItem('user', JSON.stringify(data.user))
-      router.push('/products') // redirect after login
-    } else {
-      setError('Invalid email or password')
+      if (data.token) {
+        localStorage.setItem('token', data.token)
+        localStorage.setItem('user', JSON.stringify(data.user))
+        router.push('/products')
+      } else {
+        setError('Invalid email or password')
+      }
+    } catch (err) {
+      setError('Something went wrong. Please try again.')
+    } finally {
       setLoading(false)
     }
   }
@@ -41,49 +46,55 @@ export default function LoginPage() {
           </div>
         )}
 
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '0.9rem' }}>Email</label>
-          <input
-            type="email"
-            placeholder="you@example.com"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '1rem', outline: 'none', boxSizing: 'border-box' }}
-          />
-        </div>
+        {/* ✅ Wrapped in form */}
+        <form onSubmit={handleLogin}>
+          <div style={{ marginBottom: '16px' }}>
+            <label htmlFor="email" style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '0.9rem' }}>Email</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '1rem', outline: 'none', boxSizing: 'border-box' }}
+            />
+          </div>
 
-        <div style={{ marginBottom: '24px' }}>
-          <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '0.9rem' }}>Password</label>
-          <input
-            type="password"
-            placeholder="••••••••"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleLogin()}
-            style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '1rem', outline: 'none', boxSizing: 'border-box' }}
-          />
-        </div>
+          <div style={{ marginBottom: '24px' }}>
+            <label htmlFor="password" style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '0.9rem' }}>Password</label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '1rem', outline: 'none', boxSizing: 'border-box' }}
+            />
+          </div>
 
-        <button
-          onClick={handleLogin}
-          disabled={loading}
-          style={{
-            width: '100%', padding: '14px',
-            background: loading ? '#666' : '#000',
-            color: '#fff', border: 'none',
-            borderRadius: '8px', fontSize: '1rem',
-            fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer'
-          }}
-        >
-          {loading ? 'Logging in...' : 'Login →'}
-        </button>
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              width: '100%', padding: '14px',
+              background: loading ? '#666' : '#000',
+              color: '#fff', border: 'none',
+              borderRadius: '8px', fontSize: '1rem',
+              fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer'
+            }}
+          >
+            {loading ? 'Logging in...' : 'Login →'}
+          </button>
+        </form>
 
         <p style={{ textAlign: 'center', marginTop: '24px', color: '#666', fontSize: '0.9rem' }}>
-  Don't have an account?{' '}
-  <Link href="/register" style={{ color: '#000', fontWeight: '600', textDecoration: 'none' }}>
-    Sign Up
-  </Link>
-</p>
+          Don't have an account?{' '}
+          <Link href="/register" style={{ color: '#000', fontWeight: '600', textDecoration: 'none' }}>
+            Sign Up
+          </Link>
+        </p>
       </div>
     </main>
   )
