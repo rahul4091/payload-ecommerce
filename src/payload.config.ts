@@ -5,7 +5,7 @@ import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
-import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob'  // ← add this
+import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob'
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
 import Products from './collections/Products'
@@ -23,17 +23,19 @@ export default buildConfig({
     'http://localhost:5173',
     'https://payload-ecommerce-eight.vercel.app',
     'https://payload-ecommerce-rahuls-projects-db206c04.vercel.app',
+    /https:\/\/payload-ecommerce.*\.vercel\.app/,  // ✅ covers all preview deployments
   ],
   csrf: [
     'http://localhost:3000',
     'http://localhost:5173',
     'https://payload-ecommerce-eight.vercel.app',
     'https://payload-ecommerce-rahuls-projects-db206c04.vercel.app',
+    /https:\/\/payload-ecommerce.*\.vercel\.app/,  // ✅ covers all preview deployments
   ],
   admin: {
     user: Users.slug,
     importMap: {
-      baseDir: path.resolve(dirname),
+      baseDir: path.resolve(process.cwd(), 'src'), // ✅ fixed — dirname is unreliable on Vercel
     },
   },
   email: nodemailerAdapter({
@@ -59,7 +61,7 @@ export default buildConfig({
   }),
   sharp,
   plugins: [
-    vercelBlobStorage({        // ← add this
+    vercelBlobStorage({
       enabled: true,
       collections: {
         media: true,

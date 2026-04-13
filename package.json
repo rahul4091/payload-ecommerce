@@ -5,7 +5,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "build": "cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" next build",
+    "build": "cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" next build generate:importMap && payload generate:types",
     "dev": "cross-env NODE_OPTIONS=--no-deprecation next dev",
     "seed": "cross-env NODE_OPTIONS=--no-deprecation tsx src/seed.ts",
     "devsafe": "rm -rf .next && cross-env NODE_OPTIONS=--no-deprecation next dev",
