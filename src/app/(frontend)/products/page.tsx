@@ -12,8 +12,8 @@ export default function ProductsPage() {
   useEffect(() => {
     // Fetch all products and categories
     Promise.all([
-      fetch(`${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"}/api/products?depth=1&limit=100`).then(r => r.json()),
-      fetch(`${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"}/api/categories?limit=50`).then(r => r.json()),
+      fetch(`/api/products?depth=1&limit=100`).then(r => r.json()),
+      fetch(`/api/categories?limit=50`).then(r => r.json()),
     ]).then(([productsData, categoriesData]) => {
       setProducts(productsData.docs || [])
       setCategories(categoriesData.docs || [])

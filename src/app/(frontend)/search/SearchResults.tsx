@@ -13,7 +13,7 @@ export default function SearchResults() {
   useEffect(() => {
     if (!query) return
     setLoading(true)
-    fetch(`${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"}/api/products/search?q=${encodeURIComponent(query)}`)
+    fetch(`/api/products/search?q=${encodeURIComponent(query)}`)
       .then(r => r.json())
       .then(data => {
         setResults(data.results || [])
