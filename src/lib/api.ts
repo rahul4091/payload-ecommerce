@@ -1,4 +1,6 @@
-const API_URL = typeof window !== "undefined" ? "/api" : `${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"}/api`
+const API_URL = typeof window !== "undefined"
+  ? "/api"   // ← Browser uses this (relative URL)
+  : `${process.env.NEXT_PUBLIC_SERVER_URL}/api`  // ← Server uses this
 
 export async function getProducts() {
   const res = await fetch(`${API_URL}/products?depth=1&limit=100`, { cache: 'no-store' })
