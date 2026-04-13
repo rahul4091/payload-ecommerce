@@ -1,23 +1,48 @@
+const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'
+
 const API_URL = typeof window !== "undefined"
   ? "/api"
-  : `${process.env.NEXT_PUBLIC_SERVER_URL}/api`
+  : `${SERVER_URL}/api`
+
+// Debug — remove after fixing
+if (typeof window === "undefined") {
+  console.log('[api.ts] SERVER_URL:', SERVER_URL)
+  console.log('[api.ts] API_URL:', API_URL)
+}
 
 export async function getProducts() {
-  const res = await fetch(`${API_URL}/products?depth=1&limit=100`, { cache: 'no-store' })
-  const data = await res.json()
-  return data.docs || []
+  try {
+    const res = await fetch(`${API_URL}/products?depth=1&limit=100`, { cache: 'no-store' })
+    if (!res.ok) return []
+    const data = await res.json()
+    return data.docs || []
+  } catch (err) {
+    console.error('getProducts failed:', err)
+    return []  // return empty array instead of crashing
+  }
 }
 
 export async function getProduct(id: string) {
-  const res = await fetch(`${API_URL}/products/${id}?depth=2`, { cache: 'no-store' })
-  return res.json()
+  try {
+    const res = await fetch(`${API_URL}/products/${id}?depth=2`, { cache: 'no-store' })
+    if (!res.ok) return null
+    return res.json()
+  } catch (err) {
+    console.error('getProduct failed:', err)
+    return null
+  }
 }
 
-// ✅ Fixed — no featured endpoint exists, use inStock filter instead
 export async function getFeaturedProducts() {
-  const res = await fetch(`${API_URL}/products?where[inStock][equals]=true&depth=1&limit=8`, { cache: 'no-store' })
-  const data = await res.json()
-  return data.docs || []
+  try {
+    const res = await fetch(`${API_URL}/products?where[inStock][equals]=true&depth=1&limit=8`, { cache: 'no-store' })
+    if (!res.ok) return []
+    const data = await res.json()
+    return data.docs || []
+  } catch (err) {
+    console.error('getFeaturedProducts failed:', err)
+    return []
+  }
 }
 
 export async function login(email: string, password: string) {

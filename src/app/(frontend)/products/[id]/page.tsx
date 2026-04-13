@@ -1,26 +1,28 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { getProduct } from '@/lib/api'
 import AddToCartButton from '../../components/AddToCartButton'
 
-export const dynamic = 'force-dynamic'
+export default function ProductDetailPage() {
+  const { id } = useParams()
+  const [product, setProduct] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
 
-export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
-  const product = await getProduct(id)
+  useEffect(() => {
+    fetch(`/api/products/${id}?depth=2`)
+      .then(r => r.json())
+      .then(data => {
+        setProduct(data)
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
+  }, [id])
 
-  if (!product || product.errors) {
-    return (
-      <main style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 24px', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '2rem' }}>Product not found 😕</h1>
-        <a href="/products" style={{ color: '#000', textDecoration: 'none', fontWeight: '600' }}>
-          ← Back to Products
-        </a>
-      </main>
-    )
-  }
+  if (loading) return <main style={{ padding: '80px 24px', textAlign: 'center' }}><p>Loading...</p></main>
+  if (!product || product.errors) return <main style={{ padding: '80px 24px', textAlign: 'center' }}><h1>Product not found 😕</h1></main>
 
-  // ✅ Server component — NEXT_PUBLIC_SERVER_URL is available here at build/request time
-  // Image URL from Payload is a relative path, works as-is on same domain
   return (
     <main style={{ maxWidth: '1100px', margin: '0 auto', padding: '40px 24px' }}>
       <Link href="/products" style={{ color: '#666', textDecoration: 'none', fontSize: '0.9rem' }}>
