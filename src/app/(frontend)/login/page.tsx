@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { login } from '@/lib/api'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
@@ -13,21 +12,30 @@ export default function LoginPage() {
   const router = useRouter()
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()  // ← prevent page reload
+    e.preventDefault()
     setLoading(true)
     setError('')
 
     try {
-      const data = await login(email, password)
+      // ✅ Use /api/customers/login — matches where customers register
+      const res = await fetch('/api/customers/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+
+      const data = await res.json()
 
       if (data.token) {
         localStorage.setItem('token', data.token)
         localStorage.setItem('user', JSON.stringify(data.user))
+        // ✅ Tell Navbar to update immediately
+        window.dispatchEvent(new Event('auth-change'))
         router.push('/products')
       } else {
-        setError('Invalid email or password')
+        setError(data?.errors?.[0]?.message || 'Invalid email or password')
       }
-    } catch (err) {
+    } catch {
       setError('Something went wrong. Please try again.')
     } finally {
       setLoading(false)
@@ -46,7 +54,6 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* ✅ Wrapped in form */}
         <form onSubmit={handleLogin}>
           <div style={{ marginBottom: '16px' }}>
             <label htmlFor="email" style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '0.9rem' }}>Email</label>
@@ -54,9 +61,11 @@ export default function LoginPage() {
               id="email"
               name="email"
               type="email"
+              autoComplete="email"
               placeholder="you@example.com"
               value={email}
               onChange={e => setEmail(e.target.value)}
+              required
               style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '1rem', outline: 'none', boxSizing: 'border-box' }}
             />
           </div>
@@ -67,9 +76,11 @@ export default function LoginPage() {
               id="password"
               name="password"
               type="password"
+              autoComplete="current-password"
               placeholder="••••••••"
               value={password}
               onChange={e => setPassword(e.target.value)}
+              required
               style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '1rem', outline: 'none', boxSizing: 'border-box' }}
             />
           </div>

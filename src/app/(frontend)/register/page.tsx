@@ -54,9 +54,9 @@ export default function RegisterPage() {
       if (loginData.token) {
         localStorage.setItem('token', loginData.token)
         localStorage.setItem('user', JSON.stringify(loginData.user))
+        window.dispatchEvent(new Event('auth-change')) // ✅ update Navbar
         router.push('/products')
       } else {
-        // Registration succeeded but auto-login failed — send to login
         router.push('/login')
       }
     } catch {
@@ -81,80 +81,40 @@ export default function RegisterPage() {
         <form onSubmit={handleRegister}>
           <div style={{ marginBottom: '16px' }}>
             <label htmlFor="name" style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '0.9rem' }}>Full Name</label>
-            <input
-              id="name"
-              name="name"
-              type="text"
-              placeholder="John Doe"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              required
-              style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '1rem', outline: 'none', boxSizing: 'border-box' }}
-            />
+            <input id="name" name="name" type="text" autoComplete="name" placeholder="John Doe" value={name} onChange={e => setName(e.target.value)} required
+              style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '1rem', outline: 'none', boxSizing: 'border-box' }} />
           </div>
 
           <div style={{ marginBottom: '16px' }}>
             <label htmlFor="email" style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '0.9rem' }}>Email</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
-              style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '1rem', outline: 'none', boxSizing: 'border-box' }}
-            />
+            <input id="email" name="email" type="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required
+              style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '1rem', outline: 'none', boxSizing: 'border-box' }} />
           </div>
 
           <div style={{ marginBottom: '16px' }}>
             <label htmlFor="password" style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '0.9rem' }}>Password</label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              placeholder="Min. 6 characters"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-              style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '1rem', outline: 'none', boxSizing: 'border-box' }}
-            />
+            <input id="password" name="password" type="password" autoComplete="new-password" placeholder="Min. 6 characters" value={password} onChange={e => setPassword(e.target.value)} required
+              style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '1rem', outline: 'none', boxSizing: 'border-box' }} />
           </div>
 
           <div style={{ marginBottom: '24px' }}>
             <label htmlFor="confirm" style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '0.9rem' }}>Confirm Password</label>
-            <input
-              id="confirm"
-              name="confirm"
-              type="password"
-              placeholder="••••••••"
-              value={confirm}
-              onChange={e => setConfirm(e.target.value)}
-              required
-              style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '1rem', outline: 'none', boxSizing: 'border-box' }}
-            />
+            <input id="confirm" name="confirm" type="password" autoComplete="new-password" placeholder="••••••••" value={confirm} onChange={e => setConfirm(e.target.value)} required
+              style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '1rem', outline: 'none', boxSizing: 'border-box' }} />
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              width: '100%', padding: '14px',
-              background: loading ? '#666' : '#000',
-              color: '#fff', border: 'none',
-              borderRadius: '8px', fontSize: '1rem',
-              fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer'
-            }}
-          >
+          <button type="submit" disabled={loading} style={{
+            width: '100%', padding: '14px', background: loading ? '#666' : '#000',
+            color: '#fff', border: 'none', borderRadius: '8px', fontSize: '1rem',
+            fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer'
+          }}>
             {loading ? 'Creating account...' : 'Sign Up →'}
           </button>
         </form>
 
         <p style={{ textAlign: 'center', marginTop: '24px', color: '#666', fontSize: '0.9rem' }}>
           Already have an account?{' '}
-          <Link href="/login" style={{ color: '#000', fontWeight: '600', textDecoration: 'none' }}>
-            Login
-          </Link>
+          <Link href="/login" style={{ color: '#000', fontWeight: '600', textDecoration: 'none' }}>Login</Link>
         </p>
       </div>
     </main>

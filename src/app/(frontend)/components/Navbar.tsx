@@ -11,15 +11,23 @@ export default function Navbar() {
   const router = useRouter()
   const { totalItems } = useCart()
 
-  useEffect(() => {
+  const loadUser = () => {
     const stored = localStorage.getItem('user')
-    if (stored) setUser(JSON.parse(stored))
+    setUser(stored ? JSON.parse(stored) : null)
+  }
+
+  useEffect(() => {
+    loadUser()
+    // ✅ Listen for login/logout events fired from login & register pages
+    window.addEventListener('auth-change', loadUser)
+    return () => window.removeEventListener('auth-change', loadUser)
   }, [])
 
   const handleLogout = () => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
     setUser(null)
+    window.dispatchEvent(new Event('auth-change'))
     router.push('/')
   }
 
@@ -35,7 +43,7 @@ export default function Navbar() {
     <nav style={{
       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
       padding: '16px 40px', borderBottom: '1px solid #eee', background: '#fff',
-      flexWrap: 'wrap', gap: '12px'
+      flexWrap: 'wrap', gap: '12px', position: 'sticky', top: 0, zIndex: 100,
     }}>
       {/* Logo */}
       <Link href="/" style={{ fontWeight: 'bold', fontSize: '1.2rem', textDecoration: 'none', color: '#000' }}>
@@ -95,21 +103,21 @@ export default function Navbar() {
             </button>
           </>
         ) : (
-  <div style={{ display: 'flex', gap: '8px' }}>
-    <Link href="/register" style={{
-      border: '1px solid #000',
-      padding: '8px 16px', borderRadius: '8px', textDecoration: 'none', color: '#000'
-    }}>
-      Sign Up
-    </Link>
-    <Link href="/login" style={{
-      background: '#000', color: '#fff',
-      padding: '8px 16px', borderRadius: '8px', textDecoration: 'none'
-    }}>
-      Login
-    </Link>
-  </div>
-)}
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <Link href="/register" style={{
+              border: '1px solid #000',
+              padding: '8px 16px', borderRadius: '8px', textDecoration: 'none', color: '#000'
+            }}>
+              Sign Up
+            </Link>
+            <Link href="/login" style={{
+              background: '#000', color: '#fff',
+              padding: '8px 16px', borderRadius: '8px', textDecoration: 'none'
+            }}>
+              Login
+            </Link>
+          </div>
+        )}
       </div>
     </nav>
   )
