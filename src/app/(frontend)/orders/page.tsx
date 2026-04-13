@@ -16,7 +16,7 @@ export default function OrdersPage() {
       return
     }
 
-    fetch('http://localhost:3000/api/orders?depth=2', {
+    fetch('${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'}/api/orders?depth=2', {
       headers: { Authorization: `JWT ${token}` },
     })
       .then(res => res.json())
@@ -122,7 +122,7 @@ export default function OrdersPage() {
                       }}>
                         {product.image?.url ? (
                           <img
-                            src={`http://localhost:3000${product.image.url}`}
+                            src={`${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"}${product.image.url}`}
                             alt={product.name}
                             style={{ width: '56px', height: '56px', objectFit: 'contain', borderRadius: '8px' }}
                           />

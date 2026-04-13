@@ -13,7 +13,7 @@ export default function SearchPage() {
   useEffect(() => {
     if (!query) return
     setLoading(true)
-    fetch(`http://localhost:3000/api/products/search?q=${encodeURIComponent(query)}`)
+    fetch(`${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"}/api/products/search?q=${encodeURIComponent(query)}`)
       .then(r => r.json())
       .then(data => {
         setResults(data.results || [])
@@ -57,7 +57,7 @@ export default function SearchPage() {
                   <div style={{ background: '#f9f9f9', height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     {product.image?.url ? (
                       <img
-                        src={`http://localhost:3000${product.image.url}`}
+                        src={`${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"}${product.image.url}`}
                         alt={product.name}
                         style={{ width: '100%', height: '200px', objectFit: 'contain' }}
                       />

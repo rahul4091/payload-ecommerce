@@ -42,7 +42,7 @@ export default function CartPage() {
           }}>
             <div style={{ width: '80px', height: '80px', background: '#f9f9f9', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               {item.image ? (
-                <img src={`http://localhost:3000${item.image}`} alt={item.name}
+                <img src={`${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"}${item.image}`} alt={item.name}
                   style={{ width: '80px', height: '80px', objectFit: 'contain', borderRadius: '8px' }} />
               ) : (
                 <span style={{ fontSize: '2rem' }}>📦</span>

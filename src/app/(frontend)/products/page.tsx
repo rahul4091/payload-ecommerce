@@ -12,8 +12,8 @@ export default function ProductsPage() {
   useEffect(() => {
     // Fetch all products and categories
     Promise.all([
-      fetch('http://localhost:3000/api/products?depth=1&limit=100').then(r => r.json()),
-      fetch('http://localhost:3000/api/categories?limit=50').then(r => r.json()),
+      fetch('${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'}/api/products?depth=1&limit=100').then(r => r.json()),
+      fetch('${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'}/api/categories?limit=50').then(r => r.json()),
     ]).then(([productsData, categoriesData]) => {
       setProducts(productsData.docs || [])
       setCategories(categoriesData.docs || [])
@@ -92,7 +92,7 @@ export default function ProductsPage() {
                 <div style={{ background: '#f9f9f9', height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {product.image?.url ? (
                     <img
-                      src={`http://localhost:3000${product.image.url}`}
+                      src={`${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"}${product.image.url}`}
                       alt={product.image.alt || product.name}
                       style={{ width: '100%', height: '220px', objectFit: 'contain' }}
                     />

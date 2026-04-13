@@ -95,7 +95,7 @@ afterChange: [
                   <p><strong>Products:</strong> ${productNames}</p>
                   <p><strong>Total:</strong> ₹${doc.total}</p>
                   <p><strong>Status:</strong> ${doc.status}</p>
-                  <a href="http://localhost:3000/admin/collections/orders/${doc.id}"
+                  <a href="${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"}/admin/collections/orders/${doc.id}"
                      style="background: #000; color: #fff; padding: 10px 20px; border-radius: 6px; text-decoration: none;">
                     View Order in Admin
                   </a>

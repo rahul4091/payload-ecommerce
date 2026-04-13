@@ -39,7 +39,7 @@ export default async function Home() {
               <div style={{ background: '#f9f9f9', height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', marginBottom: '12px' }}>
                 {product.image?.url ? (
                   <img
-                    src={`http://localhost:3000${product.image.url}`}
+                    src={`${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"}${product.image.url}`}
                     alt={product.image.alt || product.name}
                     style={{ width: '100%', height: '200px', objectFit: 'contain', borderRadius: '8px' }}
                   />
