@@ -13,14 +13,10 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
-  const handleRegister = async (e?: React.FormEvent) => {
-    e?.preventDefault()
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault()
     setError('')
 
-    if (!name || !email || !password || !confirm) {
-      setError('All fields are required')
-      return
-    }
     if (password !== confirm) {
       setError('Passwords do not match')
       return
@@ -31,23 +27,23 @@ export default function RegisterPage() {
     }
 
     setLoading(true)
-
     try {
-      const res = await fetch(`/api/users`, {
+      const res = await fetch('/api/customers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, role: 'customer' }),
+        body: JSON.stringify({ name, email, password }),
       })
 
       const data = await res.json()
 
       if (!res.ok) {
-        setError(data?.errors?.[0]?.message || 'Registration failed')
-        setLoading(false)
+        const msg = data?.errors?.[0]?.message || data?.message || 'Registration failed'
+        setError(msg)
         return
       }
 
-      const loginRes = await fetch(`/api/users/login`, {
+      // Auto-login after registration
+      const loginRes = await fetch('/api/customers/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -58,21 +54,12 @@ export default function RegisterPage() {
       if (loginData.token) {
         localStorage.setItem('token', loginData.token)
         localStorage.setItem('user', JSON.stringify(loginData.user))
-
-        await fetch(`/api/customers`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `JWT ${loginData.token}`,
-          },
-          body: JSON.stringify({ name, email, phone: '' }),
-        })
-
         router.push('/products')
       } else {
-        setError('Login after registration failed. Please login manually.')
+        // Registration succeeded but auto-login failed — send to login
+        router.push('/login')
       }
-    } catch (err) {
+    } catch {
       setError('Something went wrong. Please try again.')
     } finally {
       setLoading(false)
@@ -81,9 +68,9 @@ export default function RegisterPage() {
 
   return (
     <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f9f9f9' }}>
-      <div style={{ background: '#fff', padding: '40px', borderRadius: '16px', boxShadow: '0 4px 24px rgba(0,0,0,0.08)', width: '100%', maxWidth: '420px' }}>
-        <h1 style={{ fontSize: '1.8rem', fontWeight: 'bold', marginBottom: '8px' }}>Create Account 🎉</h1>
-        <p style={{ color: '#666', marginBottom: '32px' }}>Join My Store today</p>
+      <div style={{ background: '#fff', padding: '40px', borderRadius: '16px', boxShadow: '0 4px 24px rgba(0,0,0,0.08)', width: '100%', maxWidth: '400px' }}>
+        <h1 style={{ fontSize: '1.8rem', fontWeight: 'bold', marginBottom: '8px' }}>Create account 🎉</h1>
+        <p style={{ color: '#666', marginBottom: '32px' }}>Sign up to start shopping</p>
 
         {error && (
           <div style={{ background: '#fee2e2', color: '#dc2626', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontSize: '0.9rem' }}>
@@ -91,7 +78,6 @@ export default function RegisterPage() {
           </div>
         )}
 
-        {/* ✅ Wrapped in form */}
         <form onSubmit={handleRegister}>
           <div style={{ marginBottom: '16px' }}>
             <label htmlFor="name" style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '0.9rem' }}>Full Name</label>
@@ -102,6 +88,7 @@ export default function RegisterPage() {
               placeholder="John Doe"
               value={name}
               onChange={e => setName(e.target.value)}
+              required
               style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '1rem', outline: 'none', boxSizing: 'border-box' }}
             />
           </div>
@@ -115,6 +102,7 @@ export default function RegisterPage() {
               placeholder="you@example.com"
               value={email}
               onChange={e => setEmail(e.target.value)}
+              required
               style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '1rem', outline: 'none', boxSizing: 'border-box' }}
             />
           </div>
@@ -125,9 +113,10 @@ export default function RegisterPage() {
               id="password"
               name="password"
               type="password"
-              placeholder="••••••••"
+              placeholder="Min. 6 characters"
               value={password}
               onChange={e => setPassword(e.target.value)}
+              required
               style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '1rem', outline: 'none', boxSizing: 'border-box' }}
             />
           </div>
@@ -141,6 +130,7 @@ export default function RegisterPage() {
               placeholder="••••••••"
               value={confirm}
               onChange={e => setConfirm(e.target.value)}
+              required
               style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '1rem', outline: 'none', boxSizing: 'border-box' }}
             />
           </div>
@@ -156,7 +146,7 @@ export default function RegisterPage() {
               fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer'
             }}
           >
-            {loading ? 'Creating Account...' : 'Create Account →'}
+            {loading ? 'Creating account...' : 'Sign Up →'}
           </button>
         </form>
 
