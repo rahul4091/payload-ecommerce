@@ -13,10 +13,10 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
-  const handleRegister = async () => {
+  const handleRegister = async (e?: React.FormEvent) => {
+    e?.preventDefault()
     setError('')
 
-    // Validate
     if (!name || !email || !password || !confirm) {
       setError('All fields are required')
       return
@@ -32,55 +32,52 @@ export default function RegisterPage() {
 
     setLoading(true)
 
-  try {
-    // Step 1 — Create user
-    const res = await fetch(`/api/users`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password, role: 'customer' }),
-    })
-
-    const data = await res.json()
-
-    if (!res.ok) {
-      setError(data?.errors?.[0]?.message || 'Registration failed')
-      setLoading(false)
-      return
-    }
-
-    // Step 2 — Auto login
-    const loginRes = await fetch(`/api/users/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    })
-
-    const loginData = await loginRes.json()
-
-    if (loginData.token) {
-      localStorage.setItem('token', loginData.token)
-      localStorage.setItem('user', JSON.stringify(loginData.user))
-
-      // Step 3 — Create customer record
-      await fetch(`/api/customers`, {
+    try {
+      const res = await fetch(`/api/users`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `JWT ${loginData.token}`,
-        },
-        body: JSON.stringify({ name, email, phone: '' }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password, role: 'customer' }),
       })
 
-      router.push('/products')
-    } else {
-      setError('Login after registration failed. Please login manually.')
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data?.errors?.[0]?.message || 'Registration failed')
+        setLoading(false)
+        return
+      }
+
+      const loginRes = await fetch(`/api/users/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+
+      const loginData = await loginRes.json()
+
+      if (loginData.token) {
+        localStorage.setItem('token', loginData.token)
+        localStorage.setItem('user', JSON.stringify(loginData.user))
+
+        await fetch(`/api/customers`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `JWT ${loginData.token}`,
+          },
+          body: JSON.stringify({ name, email, phone: '' }),
+        })
+
+        router.push('/products')
+      } else {
+        setError('Login after registration failed. Please login manually.')
+      }
+    } catch (err) {
+      setError('Something went wrong. Please try again.')
+    } finally {
+      setLoading(false)
     }
-  } catch (err) {
-    setError('Something went wrong. Please try again.')
-  } finally {
-    setLoading(false)
   }
-}
 
   return (
     <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f9f9f9' }}>
@@ -94,64 +91,74 @@ export default function RegisterPage() {
           </div>
         )}
 
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '0.9rem' }}>Full Name</label>
-          <input
-            type="text"
-            placeholder="John Doe"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '1rem', outline: 'none', boxSizing: 'border-box' }}
-          />
-        </div>
+        {/* ✅ Wrapped in form */}
+        <form onSubmit={handleRegister}>
+          <div style={{ marginBottom: '16px' }}>
+            <label htmlFor="name" style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '0.9rem' }}>Full Name</label>
+            <input
+              id="name"
+              name="name"
+              type="text"
+              placeholder="John Doe"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '1rem', outline: 'none', boxSizing: 'border-box' }}
+            />
+          </div>
 
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '0.9rem' }}>Email</label>
-          <input
-            type="email"
-            placeholder="you@example.com"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '1rem', outline: 'none', boxSizing: 'border-box' }}
-          />
-        </div>
+          <div style={{ marginBottom: '16px' }}>
+            <label htmlFor="email" style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '0.9rem' }}>Email</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '1rem', outline: 'none', boxSizing: 'border-box' }}
+            />
+          </div>
 
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '0.9rem' }}>Password</label>
-          <input
-            type="password"
-            placeholder="••••••••"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '1rem', outline: 'none', boxSizing: 'border-box' }}
-          />
-        </div>
+          <div style={{ marginBottom: '16px' }}>
+            <label htmlFor="password" style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '0.9rem' }}>Password</label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '1rem', outline: 'none', boxSizing: 'border-box' }}
+            />
+          </div>
 
-        <div style={{ marginBottom: '24px' }}>
-          <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '0.9rem' }}>Confirm Password</label>
-          <input
-            type="password"
-            placeholder="••••••••"
-            value={confirm}
-            onChange={e => setConfirm(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleRegister()}
-            style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '1rem', outline: 'none', boxSizing: 'border-box' }}
-          />
-        </div>
+          <div style={{ marginBottom: '24px' }}>
+            <label htmlFor="confirm" style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '0.9rem' }}>Confirm Password</label>
+            <input
+              id="confirm"
+              name="confirm"
+              type="password"
+              placeholder="••••••••"
+              value={confirm}
+              onChange={e => setConfirm(e.target.value)}
+              style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '1rem', outline: 'none', boxSizing: 'border-box' }}
+            />
+          </div>
 
-        <button
-          onClick={handleRegister}
-          disabled={loading}
-          style={{
-            width: '100%', padding: '14px',
-            background: loading ? '#666' : '#000',
-            color: '#fff', border: 'none',
-            borderRadius: '8px', fontSize: '1rem',
-            fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer'
-          }}
-        >
-          {loading ? 'Creating Account...' : 'Create Account →'}
-        </button>
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              width: '100%', padding: '14px',
+              background: loading ? '#666' : '#000',
+              color: '#fff', border: 'none',
+              borderRadius: '8px', fontSize: '1rem',
+              fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer'
+            }}
+          >
+            {loading ? 'Creating Account...' : 'Create Account →'}
+          </button>
+        </form>
 
         <p style={{ textAlign: 'center', marginTop: '24px', color: '#666', fontSize: '0.9rem' }}>
           Already have an account?{' '}
