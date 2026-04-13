@@ -11,6 +11,12 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
+    remotePatterns: [
+    {
+      protocol: 'https',
+      hostname: '**.vercel.app',
+    },
+  ],
     localPatterns: [
       {
         pathname: '/api/media/file/**',
