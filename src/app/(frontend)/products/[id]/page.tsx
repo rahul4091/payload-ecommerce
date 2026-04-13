@@ -22,8 +22,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     )
   }
 
-  const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL || '${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'}'
-
+  const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL || `${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"}`
   return (
     <main style={{ maxWidth: '1100px', margin: '0 auto', padding: '40px 24px' }}>
       <Link href="/products" style={{ color: '#666', textDecoration: 'none', fontSize: '0.9rem' }}>

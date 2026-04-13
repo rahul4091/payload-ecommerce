@@ -16,7 +16,7 @@ export default function OrdersPage() {
       return
     }
 
-    fetch('${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'}/api/orders?depth=2', {
+    fetch(`${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"}/api/orders?depth=2`, {
       headers: { Authorization: `JWT ${token}` },
     })
       .then(res => res.json())

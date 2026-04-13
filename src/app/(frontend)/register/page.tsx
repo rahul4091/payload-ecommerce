@@ -34,7 +34,7 @@ export default function RegisterPage() {
 
     try {
       // Step 1 — Create user account
-      const res = await fetch('${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'}/api/users', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"}/api/users`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -54,7 +54,7 @@ export default function RegisterPage() {
       }
 
       // Step 2 — Auto login after registration
-      const loginRes = await fetch('${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'}/api/users/login', {
+      const loginRes = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"}/api/users/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -67,7 +67,7 @@ export default function RegisterPage() {
         localStorage.setItem('user', JSON.stringify(loginData.user))
 
         // Step 3 — Create customer record
-        await fetch('${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'}/api/customers', {
+        await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"}/api/customers`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

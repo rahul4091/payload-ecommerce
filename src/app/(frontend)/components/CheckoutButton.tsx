@@ -41,7 +41,7 @@ export default function CheckoutButton() {
         customerId = customerData.docs[0].id
       } else {
         // Create customer
-        const newCustomer = await fetch('${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'}/api/customers', {
+        const newCustomer = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"}/api/customers`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
