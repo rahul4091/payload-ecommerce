@@ -1,13 +1,27 @@
-import Link from 'next/link'
-import { getFeaturedProducts } from '@/lib/api'
+'use client'
 
-export default async function Home() {
-  let featured = []
-  try {
-    featured = await getFeaturedProducts() || []
-  } catch {
-    featured = []
-  }
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+
+export default function HomePage() {
+  const [products, setProducts] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/products?where[inStock][equals]=true&depth=1&limit=8')
+      .then(r => r.json())
+      .then(data => {
+        setProducts(data.docs || [])
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <main style={{ textAlign: 'center', padding: '80px 24px' }}>
+      <p style={{ color: '#666' }}>Loading...</p>
+    </main>
+  )
 
   return (
     <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 24px' }}>
@@ -33,13 +47,13 @@ export default async function Home() {
 
       <h2 style={{ fontSize: '1.5rem', marginBottom: '24px' }}>Featured Products</h2>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px' }}>
-        {featured?.map((product: any) => (
+        {products.map((product: any) => (   // ✅ was 'featured', now 'products'
           <Link key={product.id} href={`/products/${product.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
             <div style={{ border: '1px solid #eee', borderRadius: '12px', padding: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
               <div style={{ background: '#f9f9f9', height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', marginBottom: '12px' }}>
                 {product.image?.url ? (
                   <img
-                    src={`${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"}${product.image.url}`}
+                    src={product.image.url}  // ✅ removed NEXT_PUBLIC_SERVER_URL prefix
                     alt={product.image.alt || product.name}
                     style={{ width: '100%', height: '200px', objectFit: 'contain', borderRadius: '8px' }}
                   />
