@@ -32,62 +32,55 @@ export default function RegisterPage() {
 
     setLoading(true)
 
-    try {
-      // Step 1 — Create user account
-      const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"}/api/users`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name,
-          email,
-          password,
-          role: 'customer',
-        }),
-      })
+  try {
+    // Step 1 — Create user
+    const res = await fetch(`/api/users`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password, role: 'customer' }),
+    })
 
-      const data = await res.json()
+    const data = await res.json()
 
-      if (!res.ok) {
-        setError(data?.errors?.[0]?.message || 'Registration failed')
-        setLoading(false)
-        return
-      }
-
-      // Step 2 — Auto login after registration
-      const loginRes = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"}/api/users/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      })
-
-      const loginData = await loginRes.json()
-
-      if (loginData.token) {
-        localStorage.setItem('token', loginData.token)
-        localStorage.setItem('user', JSON.stringify(loginData.user))
-
-        // Step 3 — Create customer record
-        await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"}/api/customers`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `JWT ${loginData.token}`,
-          },
-          body: JSON.stringify({
-            name,
-            email,
-            phone: '',
-          }),
-        })
-
-        router.push('/products')
-      }
-    } catch (err) {
-      setError('Something went wrong. Please try again.')
-    } finally {
+    if (!res.ok) {
+      setError(data?.errors?.[0]?.message || 'Registration failed')
       setLoading(false)
+      return
     }
+
+    // Step 2 — Auto login
+    const loginRes = await fetch(`/api/users/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    })
+
+    const loginData = await loginRes.json()
+
+    if (loginData.token) {
+      localStorage.setItem('token', loginData.token)
+      localStorage.setItem('user', JSON.stringify(loginData.user))
+
+      // Step 3 — Create customer record
+      await fetch(`/api/customers`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `JWT ${loginData.token}`,
+        },
+        body: JSON.stringify({ name, email, phone: '' }),
+      })
+
+      router.push('/products')
+    } else {
+      setError('Login after registration failed. Please login manually.')
+    }
+  } catch (err) {
+    setError('Something went wrong. Please try again.')
+  } finally {
+    setLoading(false)
   }
+}
 
   return (
     <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f9f9f9' }}>

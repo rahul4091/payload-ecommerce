@@ -16,46 +16,55 @@ const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
 export default buildConfig({
-  serverURL: process.env.NEXT_PUBLIC_SERVER_URL,
+  // ✅ Fallback to localhost if env var missing
+  serverURL: process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000',
+
   cors: [
-  'http://localhost:3000',
-  'http://localhost:5173',
-  'https://payload-ecommerce-eight.vercel.app',       // ← add this
-  'https://payload-ecommerce-rahuls-projects-db206c04.vercel.app',
-],
-csrf: [
-  'http://localhost:3000',
-  'http://localhost:5173',
-  'https://payload-ecommerce-eight.vercel.app',       // ← add this
-  'https://payload-ecommerce-rahuls-projects-db206c04.vercel.app',
-],
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'https://payload-ecommerce-eight.vercel.app',
+    'https://payload-ecommerce-rahuls-projects-db206c04.vercel.app',
+  ],
+
+  csrf: [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'https://payload-ecommerce-eight.vercel.app',
+    'https://payload-ecommerce-rahuls-projects-db206c04.vercel.app',
+  ],
+
   admin: {
     user: Users.slug,
     importMap: {
       baseDir: path.resolve(dirname),
     },
   },
+
   email: nodemailerAdapter({
-  defaultFromAddress: process.env.EMAIL_FROM || 'noreply@mystore.com',
-  defaultFromName: 'My Store',
-  transportOptions: {
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT) || 2525,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
+    defaultFromAddress: process.env.EMAIL_FROM || 'noreply@mystore.com',
+    defaultFromName: 'My Store',
+    transportOptions: {
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT) || 2525,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
     },
-  },
-}),
+  }),
+
   collections: [Users, Media, Products, Categories, Customers, Orders],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
+
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
+
   db: mongooseAdapter({
     url: process.env.DATABASE_URL || '',
   }),
+
   sharp,
   plugins: [],
 })

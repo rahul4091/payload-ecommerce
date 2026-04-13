@@ -5,6 +5,11 @@ import { useCart } from '../context/CartContext'
 import { useRouter } from 'next/navigation'
 import { createOrder } from '@/lib/api'
 
+// Relative on client, absolute on server
+const BASE_URL = typeof window !== 'undefined'
+  ? ''
+  : process.env.NEXT_PUBLIC_SERVER_URL || ''
+
 export default function CheckoutButton() {
   const { items, totalPrice, clearCart } = useCart()
   const [loading, setLoading] = useState(false)
@@ -12,9 +17,9 @@ export default function CheckoutButton() {
   const router = useRouter()
 
   const handleCheckout = async () => {
-    // Check if logged in
-    const token = localStorage.getItem('token')
-    const user = localStorage.getItem('user')
+    // ✅ Safe localStorage access
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+    const user = typeof window !== 'undefined' ? localStorage.getItem('user') : null
 
     if (!token || !user) {
       router.push('/login')
@@ -22,14 +27,12 @@ export default function CheckoutButton() {
     }
 
     const parsedUser = JSON.parse(user)
-
     setLoading(true)
     setError('')
 
     try {
-      // First find or create customer record matching logged in user
       const customerRes = await fetch(
-        `${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"}/api/customers?where[email][equals]=${parsedUser.email}`,
+        `${BASE_URL}/api/customers?where[email][equals]=${parsedUser.email}`,
         { headers: { Authorization: `JWT ${token}` } }
       )
       const customerData = await customerRes.json()
@@ -37,11 +40,9 @@ export default function CheckoutButton() {
       let customerId
 
       if (customerData.docs.length > 0) {
-        // Customer exists
         customerId = customerData.docs[0].id
       } else {
-        // Create customer
-        const newCustomer = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"}/api/customers`, {
+        const newCustomer = await fetch(`${BASE_URL}/api/customers`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -56,7 +57,6 @@ export default function CheckoutButton() {
         customerId = newCustomerData.doc.id
       }
 
-      // Create the order
       const order = await createOrder({
         customer: customerId,
         products: items.map(item => item.id),

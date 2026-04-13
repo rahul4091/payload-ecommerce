@@ -44,7 +44,6 @@ const Orders: CollectionConfig = {
       return data
     },
   ],
-
 afterChange: [
       async ({ doc, operation, req }) => {
         // Only send email on new order creation

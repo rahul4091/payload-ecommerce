@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { searchProducts } from '@/lib/api'
 
 export default function SearchResults() {
   const searchParams = useSearchParams()
@@ -10,17 +11,18 @@ export default function SearchResults() {
   const [results, setResults] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-    if (!query) return
-    setLoading(true)
-    fetch(`/api/products/search?q=${encodeURIComponent(query)}`)
-      .then(r => r.json())
-      .then(data => {
-        setResults(data.results || [])
-        setLoading(false)
-      })
-  }, [query])
+  // ✅ Use the api.ts function which calls your custom /search endpoint
 
+useEffect(() => {
+  if (!query) return
+  setLoading(true)
+  searchProducts(query)
+    .then(results => {
+      setResults(results)  // already returns data.results from api.ts
+      setLoading(false)
+    })
+    .catch(() => setLoading(false))
+}, [query])
   return (
     <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 24px' }}>
       <Link href="/products" style={{ color: '#666', textDecoration: 'none', fontSize: '0.9rem' }}>
@@ -29,7 +31,9 @@ export default function SearchResults() {
       <h1 style={{ fontSize: '2rem', margin: '8px 0 24px' }}>
         Search results for <span style={{ color: '#16a34a' }}>"{query}"</span>
       </h1>
+
       {loading && <p style={{ color: '#666' }}>Searching...</p>}
+
       {!loading && results.length === 0 && query && (
         <div style={{ textAlign: 'center', padding: '60px' }}>
           <p style={{ fontSize: '3rem' }}>😕</p>
@@ -41,6 +45,7 @@ export default function SearchResults() {
           }}>Browse All Products</Link>
         </div>
       )}
+
       {results.length > 0 && (
         <>
           <p style={{ color: '#666', marginBottom: '24px' }}>{results.length} products found</p>
@@ -50,8 +55,11 @@ export default function SearchResults() {
                 <div style={{ border: '1px solid #eee', borderRadius: '12px', overflow: 'hidden' }}>
                   <div style={{ background: '#f9f9f9', height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     {product.image?.url ? (
-                      <img src={`${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"}${product.image.url}`}
-                        alt={product.name} style={{ width: '100%', height: '200px', objectFit: 'contain' }} />
+                      <img
+                        src={product.image.url}  // ✅ relative path
+                        alt={product.name}
+                        style={{ width: '100%', height: '200px', objectFit: 'contain' }}
+                      />
                     ) : (
                       <span style={{ fontSize: '3rem' }}>📦</span>
                     )}

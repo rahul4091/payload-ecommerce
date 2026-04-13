@@ -2,10 +2,7 @@ import Link from 'next/link'
 import { getProduct } from '@/lib/api'
 import AddToCartButton from '../../components/AddToCartButton'
 
-// Don't pre-generate static pages at build time — generate on demand
 export const dynamic = 'force-dynamic'
-// OR use this to generate pages on first visit instead of build time:
-// export const dynamicParams = true
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -22,7 +19,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     )
   }
 
-  const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL || `${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"}`
+  // ✅ Server component — NEXT_PUBLIC_SERVER_URL is available here at build/request time
+  // Image URL from Payload is a relative path, works as-is on same domain
   return (
     <main style={{ maxWidth: '1100px', margin: '0 auto', padding: '40px 24px' }}>
       <Link href="/products" style={{ color: '#666', textDecoration: 'none', fontSize: '0.9rem' }}>
@@ -34,7 +32,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         <div style={{ background: '#f9f9f9', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px' }}>
           {product.image?.url ? (
             <img
-              src={`${serverUrl}${product.image.url}`}
+              src={product.image.url}
               alt={product.image.alt || product.name}
               style={{ width: '100%', maxHeight: '400px', objectFit: 'contain', borderRadius: '16px' }}
             />
@@ -43,7 +41,6 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           )}
         </div>
 
-        {/* rest of your JSX stays exactly the same... */}
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           {product.category && (
             <span style={{ fontSize: '0.8rem', color: '#888', background: '#f3f3f3', padding: '4px 12px', borderRadius: '999px', display: 'inline-block', marginBottom: '16px', width: 'fit-content' }}>

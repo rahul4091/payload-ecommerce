@@ -92,7 +92,7 @@ export default function ProductsPage() {
                 <div style={{ background: '#f9f9f9', height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {product.image?.url ? (
                     <img
-                      src={`${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"}${product.image.url}`}
+                    src={product.image.url}
                       alt={product.image.alt || product.name}
                       style={{ width: '100%', height: '220px', objectFit: 'contain' }}
                     />
