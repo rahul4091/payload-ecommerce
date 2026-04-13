@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { login } from '@/lib/api'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -78,8 +79,11 @@ export default function LoginPage() {
         </button>
 
         <p style={{ textAlign: 'center', marginTop: '24px', color: '#666', fontSize: '0.9rem' }}>
-          <a href="/" style={{ color: '#000', textDecoration: 'none', fontWeight: '500' }}>← Back to Home</a>
-        </p>
+  Don't have an account?{' '}
+  <Link href="/register" style={{ color: '#000', fontWeight: '600', textDecoration: 'none' }}>
+    Sign Up
+  </Link>
+</p>
       </div>
     </main>
   )

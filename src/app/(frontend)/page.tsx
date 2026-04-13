@@ -1,17 +1,17 @@
-
-'use client'
-
-import { useState, useEffect } from 'react'
-
 import Link from 'next/link'
 import { getFeaturedProducts } from '@/lib/api'
 
 export default async function Home() {
-  const featured = await getFeaturedProducts()
+  let featured = []
+  try {
+    featured = await getFeaturedProducts() || []
+  } catch {
+    featured = []
+  }
 
   return (
     <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 24px' }}>
-      <h1 style={{ fontSize: '2.5rem', marginBottom: '8px' }}>🛍️ My Store</h1>
+      <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '8px' }}>🛍️ My Store</h1>
       <p style={{ color: '#666', marginBottom: '32px' }}>Powered by Payload CMS</p>
 
       <div style={{ display: 'flex', gap: '16px', marginBottom: '48px' }}>
@@ -32,23 +32,25 @@ export default async function Home() {
       </div>
 
       <h2 style={{ fontSize: '1.5rem', marginBottom: '24px' }}>Featured Products</h2>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px' }}>
         {featured?.map((product: any) => (
-          <div key={product.id} style={{
-            border: '1px solid #eee', borderRadius: '12px',
-            padding: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
-          }}>
-            {product.image?.url && (
-              <img
-                src={`http://localhost:3000${product.image.url}`}
-                alt={product.image.alt}
-                style={{ width: '100%', height: '200px', objectFit: 'contain',
-                  borderRadius: '8px', marginBottom: '12px', background: '#f9f9f9' }}
-              />
-            )}
-            <h3 style={{ fontSize: '1rem', fontWeight: '600', margin: '0 0 8px' }}>{product.name}</h3>
-            <p style={{ color: '#16a34a', fontWeight: 'bold', margin: 0 }}>₹{product.price}</p>
-          </div>
+          <Link key={product.id} href={`/products/${product.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+            <div style={{ border: '1px solid #eee', borderRadius: '12px', padding: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+              <div style={{ background: '#f9f9f9', height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', marginBottom: '12px' }}>
+                {product.image?.url ? (
+                  <img
+                    src={`http://localhost:3000${product.image.url}`}
+                    alt={product.image.alt || product.name}
+                    style={{ width: '100%', height: '200px', objectFit: 'contain', borderRadius: '8px' }}
+                  />
+                ) : (
+                  <span style={{ fontSize: '3rem' }}>📦</span>
+                )}
+              </div>
+              <h3 style={{ fontWeight: '600', margin: '0 0 8px' }}>{product.name}</h3>
+              <p style={{ color: '#16a34a', fontWeight: 'bold', margin: 0 }}>₹{product.price}</p>
+            </div>
+          </Link>
         ))}
       </div>
     </main>

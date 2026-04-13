@@ -1,7 +1,7 @@
 const API_URL = 'http://localhost:3000/api'
 
 export async function getProducts() {
-  const res = await fetch(`${API_URL}/products?depth=1`, { cache: 'no-store' })
+  const res = await fetch(`${API_URL}/products?depth=1&limit=100`, { cache: 'no-store' })
   const data = await res.json()
   return data.docs
 }
@@ -48,4 +48,14 @@ export async function getMyOrders(token: string) {
     cache: 'no-store',
   })
   return res.json()
+}
+
+
+export async function searchProducts(query: string) {
+  const res = await fetch(
+    `${API_URL}/products/search?q=${encodeURIComponent(query)}`,
+    { cache: 'no-store' }
+  )
+  const data = await res.json()
+  return data.results || []
 }
