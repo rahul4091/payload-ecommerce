@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import AddToCartButton from '../../components/AddToCartButton'
+import { getImageUrl } from '@/lib/constants'
 
 export default function ProductDetailPage() {
   const { id } = useParams()
@@ -34,7 +35,7 @@ export default function ProductDetailPage() {
         <div style={{ background: '#f9f9f9', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px' }}>
           {product.image?.url ? (
             <img
-              src={product.image.url}
+              src={getImageUrl(product.image?.url)}
               alt={product.image.alt || product.name}
               style={{ width: '100%', maxHeight: '400px', objectFit: 'contain', borderRadius: '16px' }}
             />

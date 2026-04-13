@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { searchProducts } from '@/lib/api'
+import { getImageUrl } from '@/lib/constants'
 
 export default function SearchResults() {
   const searchParams = useSearchParams()
@@ -56,7 +57,7 @@ useEffect(() => {
                   <div style={{ background: '#f9f9f9', height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     {product.image?.url ? (
                       <img
-                        src={product.image.url}  // ✅ relative path
+                      src={getImageUrl(product.image?.url)}
                         alt={product.name}
                         style={{ width: '100%', height: '200px', objectFit: 'contain' }}
                       />

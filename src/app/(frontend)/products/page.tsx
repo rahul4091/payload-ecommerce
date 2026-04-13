@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { getImageUrl } from '@/lib/constants'
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<any[]>([])
@@ -92,7 +93,7 @@ export default function ProductsPage() {
                 <div style={{ background: '#f9f9f9', height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {product.image?.url ? (
                     <img
-                    src={product.image.url}
+                    src={getImageUrl(product.image?.url)}
                       alt={product.image.alt || product.name}
                       style={{ width: '100%', height: '220px', objectFit: 'contain' }}
                     />

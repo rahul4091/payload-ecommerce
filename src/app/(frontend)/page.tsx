@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-
+import { getImageUrl } from '@/lib/constants'
 export default function HomePage() {
   const [products, setProducts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -53,7 +53,7 @@ export default function HomePage() {
               <div style={{ background: '#f9f9f9', height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', marginBottom: '12px' }}>
                 {product.image?.url ? (
                   <img
-                    src={product.image.url}  // ✅ removed NEXT_PUBLIC_SERVER_URL prefix
+                  src={getImageUrl(product.image?.url)}
                     alt={product.image.alt || product.name}
                     style={{ width: '100%', height: '200px', objectFit: 'contain', borderRadius: '8px' }}
                   />

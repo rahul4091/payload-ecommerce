@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { getImageUrl } from '@/lib/constants'
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<any[]>([])
@@ -122,7 +123,7 @@ export default function OrdersPage() {
                       }}>
                         {product.image?.url ? (
                           <img
-                            src={product.image.url}
+                            src={getImageUrl(product.image?.url)}
                             alt={product.name}
                             style={{ width: '56px', height: '56px', objectFit: 'contain', borderRadius: '8px' }}
                           />
