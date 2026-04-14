@@ -1,11 +1,13 @@
 export const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'
 
-// Use this for ALL image URLs
 export function getImageUrl(url: string | undefined | null): string {
   if (!url) return ''
+
+  // If it's already a full URL (Vercel Blob, external) — use as is
   if (url.startsWith('http')) {
-    // Replace any wrong domain with the correct one
-    return url.replace(/https:\/\/[^/]+/, SERVER_URL)
+    return url
   }
+
+  // If it's a relative URL — prepend server URL
   return `${SERVER_URL}${url}`
 }
