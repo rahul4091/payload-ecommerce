@@ -1,4 +1,4 @@
-const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'
+const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'https://payload-ecommerce-eight.vercel.app'
 
 const API_URL = typeof window !== "undefined"
   ? "/api"
