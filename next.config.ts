@@ -12,14 +12,13 @@ const nextConfig: NextConfig = {
   },
   images: {
     remotePatterns: [
-    {
-      protocol: 'https',
-      hostname: '**.vercel.app',
-    },
-  ],
-    localPatterns: [
       {
-        pathname: '/api/media/file/**',
+        protocol: 'https',
+        hostname: '**.vercel.app',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
       },
     ],
   },
@@ -29,7 +28,6 @@ const nextConfig: NextConfig = {
       '.js': ['.ts', '.tsx', '.js', '.jsx'],
       '.mjs': ['.mts', '.mjs'],
     }
-
     return webpackConfig
   },
   turbopack: {
