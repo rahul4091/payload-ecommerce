@@ -40,18 +40,22 @@ export default buildConfig({
       baseDir: path.resolve(process.cwd(), 'src'), // ✅ fixed — dirname is unreliable on Vercel
     },
   },
-  email: nodemailerAdapter({
-    defaultFromAddress: process.env.EMAIL_FROM || 'noreply@mystore.com',
-    defaultFromName: 'My Store',
-    transportOptions: {
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT) || 2525,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    },
-  }),
+  ...(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS
+    ? {
+        email: nodemailerAdapter({
+          defaultFromAddress: process.env.EMAIL_FROM || 'noreply@mystore.com',
+          defaultFromName: 'My Store',
+          transportOptions: {
+            host: process.env.SMTP_HOST,
+            port: Number(process.env.SMTP_PORT) || 2525,
+            auth: {
+              user: process.env.SMTP_USER,
+              pass: process.env.SMTP_PASS,
+            },
+          },
+        }),
+      }
+    : {}),
 collections: [Users, Media, Products, Categories, Customers, Orders, Reviews],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
