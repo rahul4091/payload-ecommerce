@@ -13,6 +13,8 @@ import Categories from './collections/Categories'
 import Customers from './collections/Customers'
 import Orders from './collections/Orders'
 import Reviews from './collections/Reviews'
+import Wishlists from './collections/Wishlists'
+import Discounts from './collections/Discounts'
 
 
 const filename = fileURLToPath(import.meta.url)
@@ -57,7 +59,7 @@ export default buildConfig({
         }),
       }
     : {}),
-collections: [Users, Media, Products, Categories, Customers, Orders, Reviews],
+collections: [Users, Media, Products, Categories, Customers, Orders, Reviews, Wishlists, Discounts],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {

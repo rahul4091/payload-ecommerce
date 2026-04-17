@@ -75,6 +75,8 @@ export interface Config {
     customers: Customer;
     orders: Order;
     reviews: Review;
+    wishlists: Wishlist;
+    discounts: Discount;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -89,6 +91,8 @@ export interface Config {
     customers: CustomersSelect<false> | CustomersSelect<true>;
     orders: OrdersSelect<false> | OrdersSelect<true>;
     reviews: ReviewsSelect<false> | ReviewsSelect<true>;
+    wishlists: WishlistsSelect<false> | WishlistsSelect<true>;
+    discounts: DiscountsSelect<false> | DiscountsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -201,11 +205,30 @@ export interface Product {
   name: string;
   price: number;
   description?: string | null;
+  /**
+   * Units in stock. Automatically marks product out of stock when 0.
+   */
+  stock?: number | null;
   inStock?: boolean | null;
   category?: (string | null) | Category;
   image?: (string | null) | Media;
   /**
-   * Product ID from your DodoPayments dashboard (e.g. pdt_xxx). Required for checkout.
+   * Optional variants (sizes, colors, etc.). If set, customers must choose one.
+   */
+  variants?:
+    | {
+        name: string;
+        sku?: string | null;
+        /**
+         * Leave empty to use product price
+         */
+        price?: number | null;
+        stock?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Product ID from DodoPayments dashboard (e.g. pdt_xxx). Required for checkout.
    */
   dodopayments_product_id?: string | null;
   updatedAt: string;
@@ -258,9 +281,21 @@ export interface Customer {
 export interface Order {
   id: string;
   customer: string | Customer;
-  products: (string | Product)[];
+  products?: (string | Product)[] | null;
+  items?:
+    | {
+        product?: (string | null) | Product;
+        quantity?: number | null;
+        price?: number | null;
+        variant?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   status: 'pending_payment' | 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   total: number;
+  discountCode?: string | null;
+  discountAmount?: number | null;
+  shippingAmount?: number | null;
   paymentId?: string | null;
   shippingAddress?: {
     fullName?: string | null;
@@ -286,6 +321,43 @@ export interface Review {
   title: string;
   rating: number;
   comment: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "wishlists".
+ */
+export interface Wishlist {
+  id: string;
+  customer: string | Customer;
+  products?: (string | Product)[] | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "discounts".
+ */
+export interface Discount {
+  id: string;
+  code: string;
+  type: 'percentage' | 'fixed';
+  /**
+   * 10 = 10% off or ₹10 off
+   */
+  value: number;
+  /**
+   * Minimum subtotal required (₹)
+   */
+  minOrder?: number | null;
+  /**
+   * Leave empty for unlimited uses
+   */
+  maxUses?: number | null;
+  usedCount?: number | null;
+  expiresAt?: string | null;
+  active?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -340,6 +412,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'reviews';
         value: string | Review;
+      } | null)
+    | ({
+        relationTo: 'wishlists';
+        value: string | Wishlist;
+      } | null)
+    | ({
+        relationTo: 'discounts';
+        value: string | Discount;
       } | null);
   globalSlug?: string | null;
   user:
@@ -443,9 +523,19 @@ export interface ProductsSelect<T extends boolean = true> {
   name?: T;
   price?: T;
   description?: T;
+  stock?: T;
   inStock?: T;
   category?: T;
   image?: T;
+  variants?:
+    | T
+    | {
+        name?: T;
+        sku?: T;
+        price?: T;
+        stock?: T;
+        id?: T;
+      };
   dodopayments_product_id?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -493,8 +583,20 @@ export interface CustomersSelect<T extends boolean = true> {
 export interface OrdersSelect<T extends boolean = true> {
   customer?: T;
   products?: T;
+  items?:
+    | T
+    | {
+        product?: T;
+        quantity?: T;
+        price?: T;
+        variant?: T;
+        id?: T;
+      };
   status?: T;
   total?: T;
+  discountCode?: T;
+  discountAmount?: T;
+  shippingAmount?: T;
   paymentId?: T;
   shippingAddress?:
     | T
@@ -521,6 +623,32 @@ export interface ReviewsSelect<T extends boolean = true> {
   title?: T;
   rating?: T;
   comment?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "wishlists_select".
+ */
+export interface WishlistsSelect<T extends boolean = true> {
+  customer?: T;
+  products?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "discounts_select".
+ */
+export interface DiscountsSelect<T extends boolean = true> {
+  code?: T;
+  type?: T;
+  value?: T;
+  minOrder?: T;
+  maxUses?: T;
+  usedCount?: T;
+  expiresAt?: T;
+  active?: T;
   updatedAt?: T;
   createdAt?: T;
 }

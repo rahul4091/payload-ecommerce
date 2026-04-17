@@ -8,8 +8,14 @@ import { useCart } from '../context/CartContext'
 export default function Navbar() {
   const [user, setUser] = useState<any>(null)
   const [search, setSearch] = useState('')
+  const [wishlistCount, setWishlistCount] = useState(0)
   const router = useRouter()
   const { totalItems } = useCart()
+
+  const loadWishlistCount = () => {
+    const ids: string[] = JSON.parse(localStorage.getItem('wishlist') || '[]')
+    setWishlistCount(ids.length)
+  }
 
   const loadUser = () => {
     const stored = localStorage.getItem('user')
@@ -18,9 +24,13 @@ export default function Navbar() {
 
   useEffect(() => {
     loadUser()
-    // ✅ Listen for login/logout events fired from login & register pages
+    loadWishlistCount()
     window.addEventListener('auth-change', loadUser)
-    return () => window.removeEventListener('auth-change', loadUser)
+    window.addEventListener('wishlist-change', loadWishlistCount)
+    return () => {
+      window.removeEventListener('auth-change', loadUser)
+      window.removeEventListener('wishlist-change', loadWishlistCount)
+    }
   }, [])
 
   const handleLogout = () => {
@@ -75,6 +85,20 @@ export default function Navbar() {
       <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
         <Link href="/products" style={{ textDecoration: 'none', color: '#333' }}>Products</Link>
 
+        {/* Wishlist */}
+        <Link href="/wishlist" style={{ textDecoration: 'none', color: '#333', position: 'relative' }}>
+          🤍
+          {wishlistCount > 0 && (
+            <span style={{
+              position: 'absolute', top: '-8px', right: '-8px',
+              background: '#dc2626', color: '#fff', borderRadius: '999px',
+              fontSize: '0.7rem', padding: '1px 6px', fontWeight: 'bold'
+            }}>
+              {wishlistCount}
+            </span>
+          )}
+        </Link>
+
         {/* Cart */}
         <Link href="/cart" style={{ textDecoration: 'none', color: '#333', position: 'relative' }}>
           🛒
@@ -94,6 +118,11 @@ export default function Navbar() {
             <Link href="/orders" style={{ textDecoration: 'none', color: '#333', fontSize: '0.9rem' }}>
               My Orders
             </Link>
+            {user.role === 'admin' && (
+              <Link href="/dashboard" style={{ textDecoration: 'none', color: '#333', fontSize: '0.9rem' }}>
+                Dashboard
+              </Link>
+            )}
             <span style={{ color: '#666', fontSize: '0.9rem' }}>👤 {user.email}</span>
             <button onClick={handleLogout} style={{
               background: '#000', color: '#fff', border: 'none',

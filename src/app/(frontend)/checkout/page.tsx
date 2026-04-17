@@ -20,6 +20,10 @@ export default function CheckoutPage() {
   const [cart, setCart] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [discountCode, setDiscountCode] = useState('')
+  const [discountApplied, setDiscountApplied] = useState<{ code: string; amount: number; description: string } | null>(null)
+  const [discountLoading, setDiscountLoading] = useState(false)
+  const [discountError, setDiscountError] = useState('')
   const [form, setForm] = useState({
     fullName: '',
     street: '',
@@ -43,8 +47,37 @@ export default function CheckoutPage() {
     if (user?.name) setForm(prev => ({ ...prev, fullName: user.name }))
   }, [])
 
-  const total = cart.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0)
+  const SHIPPING_THRESHOLD = 500
+  const SHIPPING_COST = 49
+  const subtotal = cart.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0)
+  const shipping = subtotal >= SHIPPING_THRESHOLD ? 0 : SHIPPING_COST
+  const discount = discountApplied?.amount || 0
+  const total = Math.max(0, subtotal - discount + shipping)
   const notes = typeof window !== 'undefined' ? localStorage.getItem('order_notes') || '' : ''
+
+  const handleApplyDiscount = async () => {
+    if (!discountCode.trim()) return
+    setDiscountLoading(true)
+    setDiscountError('')
+    try {
+      const res = await fetch('/api/validate-discount', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: discountCode.trim(), subtotal }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setDiscountError(data.error || 'Invalid discount code')
+        setDiscountApplied(null)
+      } else {
+        setDiscountApplied({ code: data.code, amount: data.discountAmount, description: data.description })
+      }
+    } catch {
+      setDiscountError('Failed to validate code')
+    } finally {
+      setDiscountLoading(false)
+    }
+  }
 
   const set = (field: string, value: string) =>
     setForm(prev => ({ ...prev, [field]: value }))
@@ -77,9 +110,12 @@ export default function CheckoutPage() {
             id: item.id,
             price: item.price,
             quantity: item.quantity || 1,
+            variant: item.variant,
           })),
           shippingAddress: form,
           notes,
+          discountCode: discountApplied?.code || '',
+          discountAmount: discount,
         }),
       })
 
@@ -119,7 +155,7 @@ export default function CheckoutPage() {
       </div>
 
       <form onSubmit={handleSubmit}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: '32px', alignItems: 'start' }}>
+        <div className="checkout-grid">
 
           {/* Shipping Address */}
           <div style={{ border: '1px solid #eee', borderRadius: '12px', padding: '28px' }}>
@@ -231,15 +267,51 @@ export default function CheckoutPage() {
               ))}
             </div>
 
+            {/* Discount Code */}
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  type="text"
+                  placeholder="Discount code"
+                  value={discountCode}
+                  onChange={e => { setDiscountCode(e.target.value); setDiscountError(''); setDiscountApplied(null) }}
+                  style={{ flex: 1, padding: '8px 12px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '0.9rem', outline: 'none' }}
+                />
+                <button
+                  type="button"
+                  onClick={handleApplyDiscount}
+                  disabled={discountLoading || !discountCode.trim()}
+                  style={{ padding: '8px 14px', background: '#000', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', opacity: discountLoading ? 0.6 : 1 }}
+                >
+                  Apply
+                </button>
+              </div>
+              {discountError && <p style={{ color: '#dc2626', fontSize: '0.8rem', margin: '4px 0 0' }}>{discountError}</p>}
+              {discountApplied && <p style={{ color: '#16a34a', fontSize: '0.8rem', margin: '4px 0 0' }}>✅ {discountApplied.description}</p>}
+            </div>
+
             <div style={{ borderTop: '1px solid #eee', paddingTop: '16px', marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.9rem', color: '#666' }}>
                 <span>Subtotal</span>
-                <span>₹{total}</span>
+                <span>₹{subtotal}</span>
               </div>
+              {discount > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.9rem', color: '#16a34a' }}>
+                  <span>Discount ({discountApplied?.code})</span>
+                  <span>−₹{discount}</span>
+                </div>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.9rem', color: '#666' }}>
                 <span>Shipping</span>
-                <span style={{ color: '#16a34a' }}>Free</span>
+                <span style={{ color: shipping === 0 ? '#16a34a' : '#000' }}>
+                  {shipping === 0 ? 'Free' : `₹${shipping}`}
+                </span>
               </div>
+              {shipping > 0 && (
+                <p style={{ margin: '0 0 8px', fontSize: '0.75rem', color: '#888' }}>
+                  Add ₹{SHIPPING_THRESHOLD - subtotal} more for free shipping
+                </p>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '1.1rem', marginTop: '12px' }}>
                 <span>Total</span>
                 <span style={{ color: '#16a34a' }}>₹{total}</span>

@@ -10,18 +10,31 @@ interface ProductsClientProps {
   categories: any[]
 }
 
+const SORT_OPTIONS = [
+  { label: 'Newest', value: '-createdAt' },
+  { label: 'Price: Low to High', value: 'price' },
+  { label: 'Price: High to Low', value: '-price' },
+  { label: 'Name A–Z', value: 'name' },
+]
+
 export default function ProductsClient({ initialProducts, initialTotalPages, categories }: ProductsClientProps) {
   const [products, setProducts] = useState(initialProducts)
   const [loading, setLoading] = useState(false)
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('')
+  const [sort, setSort] = useState('-createdAt')
+  const [minPrice, setMinPrice] = useState('')
+  const [maxPrice, setMaxPrice] = useState('')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(initialTotalPages)
 
-  const fetchProducts = async (categoryId: string, nextPage: number) => {
+  const fetchProducts = async (opts: { categoryId?: string; nextPage?: number; sortBy?: string; min?: string; max?: string }) => {
+    const { categoryId = category, nextPage = 1, sortBy = sort, min = minPrice, max = maxPrice } = opts
     setLoading(true)
-    let url = `/api/products?depth=1&limit=12&page=${nextPage}`
+    let url = `/api/products?depth=1&limit=12&page=${nextPage}&sort=${sortBy}`
     if (categoryId) url += `&where[category][equals]=${categoryId}`
+    if (min) url += `&where[price][greater_than_equal]=${min}`
+    if (max) url += `&where[price][less_than_equal]=${max}`
     try {
       const res = await fetch(url)
       const data = await res.json()
@@ -39,11 +52,30 @@ export default function ProductsClient({ initialProducts, initialTotalPages, cat
   const handleCategoryChange = (categoryId: string) => {
     setCategory(categoryId)
     setSearch('')
-    fetchProducts(categoryId, 1)
+    fetchProducts({ categoryId, nextPage: 1 })
+  }
+
+  const handleSortChange = (sortBy: string) => {
+    setSort(sortBy)
+    fetchProducts({ sortBy, nextPage: 1 })
+  }
+
+  const handlePriceFilter = () => {
+    setSearch('')
+    fetchProducts({ nextPage: 1, min: minPrice, max: maxPrice })
+  }
+
+  const handleClearFilters = () => {
+    setCategory('')
+    setSort('-createdAt')
+    setMinPrice('')
+    setMaxPrice('')
+    setSearch('')
+    fetchProducts({ categoryId: '', nextPage: 1, sortBy: '-createdAt', min: '', max: '' })
   }
 
   const handlePageChange = (nextPage: number) => {
-    fetchProducts(category, nextPage)
+    fetchProducts({ nextPage })
   }
 
   const filtered = search
@@ -57,7 +89,8 @@ export default function ProductsClient({ initialProducts, initialTotalPages, cat
         <Link href="/" style={{ color: '#666', textDecoration: 'none', fontSize: '0.9rem' }}>← Back to Home</Link>
       </div>
 
-      <div style={{ display: 'flex', gap: '12px', marginBottom: '32px', flexWrap: 'wrap' }}>
+      {/* Search + Sort */}
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>
         <input
           type="text"
           placeholder="🔍 Search products..."
@@ -83,6 +116,51 @@ export default function ProductsClient({ initialProducts, initialTotalPages, cat
             <option key={c.id} value={c.id}>{c.name}</option>
           ))}
         </select>
+        <select
+          value={sort}
+          onChange={e => handleSortChange(e.target.value)}
+          style={{
+            padding: '10px 16px', border: '1px solid #ddd',
+            borderRadius: '8px', fontSize: '0.95rem',
+            background: '#fff', cursor: 'pointer', outline: 'none'
+          }}
+        >
+          {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </select>
+      </div>
+
+      {/* Price Filter */}
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '32px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <span style={{ fontSize: '0.9rem', color: '#555', fontWeight: '500' }}>Price:</span>
+        <input
+          type="number"
+          placeholder="Min ₹"
+          value={minPrice}
+          onChange={e => setMinPrice(e.target.value)}
+          style={{ width: '100px', padding: '8px 12px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '0.9rem', outline: 'none' }}
+        />
+        <span style={{ color: '#999' }}>–</span>
+        <input
+          type="number"
+          placeholder="Max ₹"
+          value={maxPrice}
+          onChange={e => setMaxPrice(e.target.value)}
+          style={{ width: '100px', padding: '8px 12px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '0.9rem', outline: 'none' }}
+        />
+        <button
+          onClick={handlePriceFilter}
+          style={{ padding: '8px 16px', background: '#000', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.9rem' }}
+        >
+          Apply
+        </button>
+        {(minPrice || maxPrice || category || sort !== '-createdAt') && (
+          <button
+            onClick={handleClearFilters}
+            style={{ padding: '8px 16px', background: '#f5f5f5', color: '#555', border: '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', fontSize: '0.9rem' }}
+          >
+            Clear Filters
+          </button>
+        )}
       </div>
 
       {loading && (
