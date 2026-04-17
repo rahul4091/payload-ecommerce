@@ -161,14 +161,32 @@ endpoints: [
     {
       name: 'status',
       type: 'select',
-      options: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
-      defaultValue: 'pending',
+      options: ['pending_payment', 'pending', 'processing', 'shipped', 'delivered', 'cancelled'],
+      defaultValue: 'pending_payment',
       required: true,
     },
     {
       name: 'total',
       type: 'number',
       required: true,
+    },
+    {
+      name: 'paymentId',
+      type: 'text',
+      admin: { position: 'sidebar' },
+    },
+    {
+      name: 'shippingAddress',
+      type: 'group',
+      fields: [
+        { name: 'fullName', type: 'text' },
+        { name: 'street', type: 'text' },
+        { name: 'city', type: 'text' },
+        { name: 'state', type: 'text' },
+        { name: 'zipcode', type: 'text' },
+        { name: 'country', type: 'text' },
+        { name: 'phone', type: 'text' },
+      ],
     },
     {
       name: 'notes',

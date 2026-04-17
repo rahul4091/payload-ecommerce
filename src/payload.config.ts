@@ -12,6 +12,8 @@ import Products from './collections/Products'
 import Categories from './collections/Categories'
 import Customers from './collections/Customers'
 import Orders from './collections/Orders'
+import Reviews from './collections/Reviews'
+
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -50,7 +52,7 @@ export default buildConfig({
       },
     },
   }),
-  collections: [Users, Media, Products, Categories, Customers, Orders],
+collections: [Users, Media, Products, Categories, Customers, Orders, Reviews],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {

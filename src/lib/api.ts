@@ -10,21 +10,23 @@ if (typeof window === "undefined") {
   console.log('[api.ts] API_URL:', API_URL)
 }
 
-export async function getProducts() {
+export async function getProducts(categoryId?: string, page = 1) {
   try {
-    const res = await fetch(`${API_URL}/products?depth=1&limit=100`, { cache: 'no-store' })
-    if (!res.ok) return []
+    let url = `${API_URL}/products?depth=1&limit=12&page=${page}`
+    if (categoryId) url += `&where[category][equals]=${categoryId}`
+    const res = await fetch(url, { next: { revalidate: 60 } })
+    if (!res.ok) return { docs: [], totalPages: 1, page: 1 }
     const data = await res.json()
-    return data.docs || []
+    return { docs: data.docs || [], totalPages: data.totalPages || 1, page: data.page || 1 }
   } catch (err) {
     console.error('getProducts failed:', err)
-    return []  // return empty array instead of crashing
+    return { docs: [], totalPages: 1, page: 1 }
   }
 }
 
 export async function getProduct(id: string) {
   try {
-    const res = await fetch(`${API_URL}/products/${id}?depth=2`, { cache: 'no-store' })
+    const res = await fetch(`${API_URL}/products/${id}?depth=2`, { next: { revalidate: 60 } })
     if (!res.ok) return null
     return res.json()
   } catch (err) {
@@ -33,9 +35,21 @@ export async function getProduct(id: string) {
   }
 }
 
+export async function getCategories() {
+  try {
+    const res = await fetch(`${API_URL}/categories?limit=100`, { next: { revalidate: 300 } })
+    if (!res.ok) return []
+    const data = await res.json()
+    return data.docs || []
+  } catch (err) {
+    console.error('getCategories failed:', err)
+    return []
+  }
+}
+
 export async function getFeaturedProducts() {
   try {
-    const res = await fetch(`${API_URL}/products?where[inStock][equals]=true&depth=1&limit=8`, { cache: 'no-store' })
+    const res = await fetch(`${API_URL}/products?where[inStock][equals]=true&depth=1&limit=8`, { next: { revalidate: 60 } })
     if (!res.ok) return []
     const data = await res.json()
     return data.docs || []
@@ -82,4 +96,25 @@ export async function searchProducts(query: string) {
   )
   const data = await res.json()
   return data.results || []
+}
+
+export async function getProductReviews(productId: string) {
+  const res = await fetch(
+    `${API_URL}/reviews?where[product][equals]=${productId}&depth=1&limit=20`,
+    { next: { revalidate: 60 } }
+  )
+  const data = await res.json()
+  return data.docs || []
+}
+
+export async function submitReview(reviewData: any, token: string) {
+  const res = await fetch(`${API_URL}/reviews`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `JWT ${token}`,
+    },
+    body: JSON.stringify(reviewData),
+  })
+  return res.json()
 }

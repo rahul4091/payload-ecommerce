@@ -8,7 +8,6 @@ import { getImageUrl } from '@/lib/constants'
 export default function CartPage() {
   const [cart, setCart] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
-  const [orderPlaced, setOrderPlaced] = useState(false)
   const [notes, setNotes] = useState('')
   const router = useRouter()
 
@@ -35,63 +34,16 @@ export default function CartPage() {
 
   const total = cart.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0)
 
-  const handleCheckout = async () => {
+  const handleCheckout = () => {
     const token = localStorage.getItem('token')
     if (!token) {
-      router.push('/login')
+      router.push('/login?redirect=/checkout')
       return
     }
-
-    // ✅ Get customer id from stored user
-    const user = JSON.parse(localStorage.getItem('user') || '{}')
-    if (!user?.id) {
-      router.push('/login')
-      return
-    }
-
-    setLoading(true)
-    try {
-      const res = await fetch('/api/orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `JWT ${token}`,
-        },
-        body: JSON.stringify({
-          customer: user.id,                    // ✅ required field — was missing
-          products: cart.map(item => item.id),
-          total,
-          status: 'pending',
-          notes,
-        }),
-      })
-
-      if (res.ok) {
-        localStorage.removeItem('cart')
-        setCart([])
-        setOrderPlaced(true)
-      } else {
-        const err = await res.json()
-        alert(err?.errors?.[0]?.message || 'Failed to place order. Please try again.')
-      }
-    } catch {
-      alert('Something went wrong.')
-    } finally {
-      setLoading(false)
-    }
+    // Save notes so checkout page can read them
+    localStorage.setItem('order_notes', notes)
+    router.push('/checkout')
   }
-
-  if (orderPlaced) return (
-    <main style={{ maxWidth: '600px', margin: '0 auto', padding: '80px 24px', textAlign: 'center' }}>
-      <p style={{ fontSize: '4rem' }}>🎉</p>
-      <h1 style={{ fontSize: '2rem', marginBottom: '16px' }}>Order Placed!</h1>
-      <p style={{ color: '#666', marginBottom: '32px' }}>Thanks for your order. You can track it in your orders page.</p>
-      <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-        <Link href="/orders" style={{ background: '#000', color: '#fff', padding: '12px 24px', borderRadius: '8px', textDecoration: 'none', fontWeight: '600' }}>View Orders</Link>
-        <Link href="/products" style={{ border: '1px solid #000', padding: '12px 24px', borderRadius: '8px', textDecoration: 'none', fontWeight: '600' }}>Continue Shopping</Link>
-      </div>
-    </main>
-  )
 
   if (cart.length === 0) return (
     <main style={{ maxWidth: '600px', margin: '0 auto', padding: '80px 24px', textAlign: 'center' }}>
@@ -162,7 +114,7 @@ export default function CartPage() {
             disabled={loading}
             style={{ width: '100%', padding: '14px', background: loading ? '#666' : '#000', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '1rem', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer' }}
           >
-            {loading ? 'Placing Order...' : 'Place Order →'}
+            Proceed to Checkout →
           </button>
           <p style={{ textAlign: 'center', marginTop: '12px', fontSize: '0.8rem', color: '#999' }}>You'll be asked to login if not already</p>
         </div>

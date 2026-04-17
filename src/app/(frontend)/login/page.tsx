@@ -1,15 +1,18 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const params = useSearchParams()
+  const redirect = params.get('redirect') || '/products'
+  const justReset = params.get('reset') === 'success'
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -31,7 +34,7 @@ export default function LoginPage() {
         localStorage.setItem('user', JSON.stringify(data.user))
         // ✅ Tell Navbar to update immediately
         window.dispatchEvent(new Event('auth-change'))
-        router.push('/products')
+        router.push(redirect)
       } else {
         setError(data?.errors?.[0]?.message || 'Invalid email or password')
       }
@@ -47,6 +50,12 @@ export default function LoginPage() {
       <div style={{ background: '#fff', padding: '40px', borderRadius: '16px', boxShadow: '0 4px 24px rgba(0,0,0,0.08)', width: '100%', maxWidth: '400px' }}>
         <h1 style={{ fontSize: '1.8rem', fontWeight: 'bold', marginBottom: '8px' }}>Welcome back 👋</h1>
         <p style={{ color: '#666', marginBottom: '32px' }}>Login to your account</p>
+
+        {justReset && (
+          <div style={{ background: '#dcfce7', color: '#16a34a', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontSize: '0.9rem' }}>
+            Password reset successful! Please login with your new password.
+          </div>
+        )}
 
         {error && (
           <div style={{ background: '#fee2e2', color: '#dc2626', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontSize: '0.9rem' }}>
@@ -71,7 +80,10 @@ export default function LoginPage() {
           </div>
 
           <div style={{ marginBottom: '24px' }}>
-            <label htmlFor="password" style={{ display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '0.9rem' }}>Password</label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+              <label htmlFor="password" style={{ fontWeight: '500', fontSize: '0.9rem' }}>Password</label>
+              <Link href="/forgot-password" style={{ fontSize: '0.85rem', color: '#666', textDecoration: 'none' }}>Forgot password?</Link>
+            </div>
             <input
               id="password"
               name="password"
@@ -108,5 +120,13 @@ export default function LoginPage() {
         </p>
       </div>
     </main>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p>Loading...</p></main>}>
+      <LoginForm />
+    </Suspense>
   )
 }

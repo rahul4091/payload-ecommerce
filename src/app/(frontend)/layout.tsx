@@ -4,8 +4,16 @@ import Navbar from './components/Navbar'
 import { CartProvider } from './context/CartContext'
 
 export const metadata = {
-  description: 'A blank template using Payload in a Next.js app.',
-  title: 'My Store',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'),
+  title: {
+    default: 'My Store',
+    template: '%s | My Store',
+  },
+  description: 'Shop the latest products at great prices.',
+  openGraph: {
+    siteName: 'My Store',
+    type: 'website',
+  },
 }
 
 export default async function RootLayout(props: { children: React.ReactNode }) {

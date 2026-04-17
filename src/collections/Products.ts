@@ -72,6 +72,14 @@ const Products: CollectionConfig = {
       type: 'upload',       // ✅ was 'relationship' — now returns image.url correctly
       relationTo: 'media',
     },
+    {
+      name: 'dodopayments_product_id',
+      type: 'text',
+      admin: {
+        description: 'Product ID from your DodoPayments dashboard (e.g. pdt_xxx). Required for checkout.',
+        position: 'sidebar',
+      },
+    },
   ],
 }
 

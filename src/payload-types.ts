@@ -74,6 +74,7 @@ export interface Config {
     categories: Category;
     customers: Customer;
     orders: Order;
+    reviews: Review;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -87,6 +88,7 @@ export interface Config {
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     customers: CustomersSelect<false> | CustomersSelect<true>;
     orders: OrdersSelect<false> | OrdersSelect<true>;
+    reviews: ReviewsSelect<false> | ReviewsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -202,6 +204,10 @@ export interface Product {
   inStock?: boolean | null;
   category?: (string | null) | Category;
   image?: (string | null) | Media;
+  /**
+   * Product ID from your DodoPayments dashboard (e.g. pdt_xxx). Required for checkout.
+   */
+  dodopayments_product_id?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -253,9 +259,33 @@ export interface Order {
   id: string;
   customer: string | Customer;
   products: (string | Product)[];
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  status: 'pending_payment' | 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   total: number;
+  paymentId?: string | null;
+  shippingAddress?: {
+    fullName?: string | null;
+    street?: string | null;
+    city?: string | null;
+    state?: string | null;
+    zipcode?: string | null;
+    country?: string | null;
+    phone?: string | null;
+  };
   notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "reviews".
+ */
+export interface Review {
+  id: string;
+  product: string | Product;
+  user: string | User;
+  title: string;
+  rating: number;
+  comment: string;
   updatedAt: string;
   createdAt: string;
 }
@@ -306,6 +336,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'orders';
         value: string | Order;
+      } | null)
+    | ({
+        relationTo: 'reviews';
+        value: string | Review;
       } | null);
   globalSlug?: string | null;
   user:
@@ -412,6 +446,7 @@ export interface ProductsSelect<T extends boolean = true> {
   inStock?: T;
   category?: T;
   image?: T;
+  dodopayments_product_id?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -460,7 +495,32 @@ export interface OrdersSelect<T extends boolean = true> {
   products?: T;
   status?: T;
   total?: T;
+  paymentId?: T;
+  shippingAddress?:
+    | T
+    | {
+        fullName?: T;
+        street?: T;
+        city?: T;
+        state?: T;
+        zipcode?: T;
+        country?: T;
+        phone?: T;
+      };
   notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "reviews_select".
+ */
+export interface ReviewsSelect<T extends boolean = true> {
+  product?: T;
+  user?: T;
+  title?: T;
+  rating?: T;
+  comment?: T;
   updatedAt?: T;
   createdAt?: T;
 }

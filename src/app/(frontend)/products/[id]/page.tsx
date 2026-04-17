@@ -1,67 +1,37 @@
-'use client'
-
-import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import type { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getImageUrl } from '@/lib/constants'
+import { getProduct, getProductReviews } from '@/lib/api'
+import AddToCartButton from '../../components/AddToCartButton'
+import ProductReviews from '../../components/ProductReviews'
 
-export default function ProductDetailPage() {
-  const { id } = useParams()
-  const [product, setProduct] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
-  const [added, setAdded] = useState(false)
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
+  const product = await getProduct(id)
+  if (!product) return { title: 'Product Not Found' }
 
-  useEffect(() => {
-    if (!id) return
-    fetch(`/api/products/${id}?depth=2`)
-      .then(r => {
-        if (!r.ok) throw new Error('Not found')
-        return r.json()
-      })
-      .then(data => {
-        if (data?.errors || data?.error) throw new Error('Not found')
-        setProduct(data)
-        setLoading(false)
-      })
-      .catch(() => {
-        setError(true)
-        setLoading(false)
-      })
-  }, [id])
+  const imageUrl = product.image?.url ? getImageUrl(product.image.url) : undefined
 
-  const handleAddToCart = () => {
-    if (!product) return
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]')
-    const existing = cart.find((i: any) => i.id === product.id)
-    if (existing) {
-      existing.quantity = (existing.quantity || 1) + 1
-    } else {
-      cart.push({ ...product, quantity: 1 })
-    }
-    localStorage.setItem('cart', JSON.stringify(cart))
-    setAdded(true)
-    setTimeout(() => setAdded(false), 2000)
+  return {
+    title: product.name,
+    description: product.description || `Buy ${product.name} for ₹${product.price}`,
+    openGraph: {
+      title: product.name,
+      description: product.description || `Buy ${product.name} for ₹${product.price}`,
+      images: imageUrl ? [{ url: imageUrl, alt: product.name }] : [],
+    },
   }
+}
 
-  if (loading) return (
-    <main style={{ padding: '80px 24px', textAlign: 'center' }}>
-      <p style={{ color: '#666' }}>Loading product...</p>
-    </main>
-  )
+export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const [product, reviews] = await Promise.all([
+    getProduct(id),
+    getProductReviews(id),
+  ])
 
-  if (error || !product) return (
-    <main style={{ padding: '80px 24px', textAlign: 'center' }}>
-      <p style={{ fontSize: '3rem' }}>😕</p>
-      <h1 style={{ fontSize: '1.8rem', marginBottom: '16px' }}>Product not found</h1>
-      <Link href="/products" style={{
-        background: '#000', color: '#fff', padding: '12px 24px',
-        borderRadius: '8px', textDecoration: 'none', fontWeight: '600'
-      }}>
-        ← Back to Products
-      </Link>
-    </main>
-  )
+  if (!product || product?.errors || product?.error) notFound()
 
   return (
     <main style={{ maxWidth: '1100px', margin: '0 auto', padding: '40px 24px' }}>
@@ -119,20 +89,7 @@ export default function ProductDetailPage() {
           )}
 
           <div style={{ display: 'flex', gap: '12px' }}>
-            <button
-              onClick={handleAddToCart}
-              disabled={!product.inStock}
-              style={{
-                flex: 1, padding: '14px 20px',
-                background: added ? '#16a34a' : (product.inStock ? '#000' : '#ccc'),
-                color: '#fff', border: 'none', borderRadius: '10px',
-                fontSize: '1rem', fontWeight: '600',
-                cursor: product.inStock ? 'pointer' : 'not-allowed',
-                transition: 'background 0.2s'
-              }}
-            >
-              {added ? '✅ Added to Cart!' : '🛒 Add to Cart'}
-            </button>
+            <AddToCartButton product={product} />
             <Link href="/cart" style={{
               padding: '14px 20px', background: '#fff', color: '#000',
               border: '1px solid #000', borderRadius: '10px',
@@ -143,6 +100,8 @@ export default function ProductDetailPage() {
           </div>
         </div>
       </div>
+
+      <ProductReviews productId={id} initialReviews={reviews} />
     </main>
   )
 }
