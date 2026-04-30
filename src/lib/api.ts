@@ -4,12 +4,6 @@ const API_URL = typeof window !== "undefined"
   ? "/api"
   : `${SERVER_URL}/api`
 
-// Debug — remove after fixing
-if (typeof window === "undefined") {
-  console.log('[api.ts] SERVER_URL:', SERVER_URL)
-  console.log('[api.ts] API_URL:', API_URL)
-}
-
 export async function getProducts(categoryId?: string, page = 1) {
   try {
     let url = `${API_URL}/products?depth=1&limit=12&page=${page}`
@@ -88,7 +82,6 @@ export async function getMyOrders(token: string) {
   return res.json()
 }
 
-// ✅ This works — your Products collection has a /search endpoint
 export async function searchProducts(query: string) {
   const res = await fetch(
     `${API_URL}/products/search?q=${encodeURIComponent(query)}`,

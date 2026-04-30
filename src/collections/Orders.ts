@@ -1,4 +1,5 @@
 import { CollectionConfig } from 'payload'
+import { ObjectId } from 'mongodb'
 
 const STATUS_EMAILS: Record<string, { subject: string; message: string }> = {
   processing: {
@@ -64,40 +65,38 @@ const Orders: CollectionConfig = {
           const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'
 
           if (operation === 'create') {
-            // Decrement stock for each ordered item
+            // Atomically decrement stock to prevent overselling under concurrent orders.
+            // Bypasses Payload hooks intentionally to use a single findOneAndUpdate.
+            const productsColl = (req.payload.db as any).connection.collection('products')
             for (const item of doc.items || []) {
               const productId = typeof item.product === 'string' ? item.product : item.product?.id
               if (!productId) continue
+              const qty = item.quantity || 1
               try {
-                const product = await req.payload.findByID({ collection: 'products', id: productId })
-                if (typeof product.stock === 'number') {
-                  const newStock = Math.max(0, product.stock - (item.quantity || 1))
-                  await req.payload.update({
-                    collection: 'products',
-                    id: productId,
-                    data: { stock: newStock, inStock: newStock > 0 },
-                  })
+                const updated = await productsColl.findOneAndUpdate(
+                  { _id: new ObjectId(productId), stock: { $gte: qty } },
+                  { $inc: { stock: -qty } },
+                  { returnDocument: 'after' },
+                )
+                if (updated) {
+                  await productsColl.updateOne(
+                    { _id: new ObjectId(productId) },
+                    { $set: { inStock: updated.stock > 0 } },
+                  )
                 }
               } catch (e) {
                 console.error('Stock decrement failed:', productId, e)
               }
             }
 
-            // Increment usedCount on discount
+            // Atomically increment usedCount to respect maxUses under concurrent orders.
             if (doc.discountCode) {
               try {
-                const discountResult = await req.payload.find({
-                  collection: 'discounts',
-                  where: { code: { equals: doc.discountCode } },
-                  limit: 1,
-                })
-                if (discountResult.docs[0]) {
-                  await req.payload.update({
-                    collection: 'discounts',
-                    id: discountResult.docs[0].id,
-                    data: { usedCount: (discountResult.docs[0].usedCount || 0) + 1 },
-                  })
-                }
+                const discountsColl = (req.payload.db as any).connection.collection('discounts')
+                await discountsColl.findOneAndUpdate(
+                  { code: doc.discountCode },
+                  { $inc: { usedCount: 1 } },
+                )
               } catch (e) {
                 console.error('Discount usedCount update failed:', e)
               }
@@ -124,17 +123,20 @@ const Orders: CollectionConfig = {
               </div>`,
             })
 
-            await req.payload.sendEmail({
-              to: process.env.SMTP_USER || '',
-              subject: `🛒 New Order — ₹${doc.total}`,
-              html: `<div style="font-family:sans-serif">
-                <h1>New Order Received!</h1>
-                <p><strong>Customer:</strong> ${customer.email}</p>
-                <p><strong>Items:</strong> ${itemNames}</p>
-                <p><strong>Total:</strong> ₹${doc.total}</p>
-                <a href="${baseUrl}/admin/collections/orders/${doc.id}" style="background:#000;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none">View in Admin</a>
-              </div>`,
-            })
+            const adminEmail = process.env.STORE_ADMIN_EMAIL || process.env.SMTP_USER || ''
+            if (adminEmail) {
+              await req.payload.sendEmail({
+                to: adminEmail,
+                subject: `🛒 New Order — ₹${doc.total}`,
+                html: `<div style="font-family:sans-serif">
+                  <h1>New Order Received!</h1>
+                  <p><strong>Customer:</strong> ${customer.email}</p>
+                  <p><strong>Items:</strong> ${itemNames}</p>
+                  <p><strong>Total:</strong> ₹${doc.total}</p>
+                  <a href="${baseUrl}/admin/collections/orders/${doc.id}" style="background:#000;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none">View in Admin</a>
+                </div>`,
+              })
+            }
           }
 
           if (operation === 'update' && previousDoc?.status && previousDoc.status !== doc.status) {
@@ -168,11 +170,15 @@ const Orders: CollectionConfig = {
       path: '/summary',
       method: 'get',
       handler: async (req) => {
-        if (!req.user) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+        if (!req.user || req.user.role !== 'admin') {
+          return Response.json({ error: 'Forbidden' }, { status: 403 })
+        }
         const orders = await req.payload.find({ collection: 'orders', limit: 1000 })
         return Response.json({
           totalOrders: orders.totalDocs,
-          totalRevenue: orders.docs.reduce((s, o) => s + (o.total || 0), 0),
+          totalRevenue: orders.docs
+            .filter(o => o.status !== 'cancelled')
+            .reduce((s, o) => s + (o.total || 0), 0),
           byStatus: {
             pending_payment: orders.docs.filter(o => o.status === 'pending_payment').length,
             pending: orders.docs.filter(o => o.status === 'pending').length,

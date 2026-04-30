@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { getImageUrl } from '@/lib/constants'
+import { getImageUrl, SHIPPING_THRESHOLD, SHIPPING_COST } from '@/lib/constants'
 
 const COUNTRIES = [
   { code: 'IN', name: 'India' },
@@ -47,13 +47,10 @@ export default function CheckoutPage() {
     if (user?.name) setForm(prev => ({ ...prev, fullName: user.name }))
   }, [])
 
-  const SHIPPING_THRESHOLD = 500
-  const SHIPPING_COST = 49
   const subtotal = cart.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0)
   const shipping = subtotal >= SHIPPING_THRESHOLD ? 0 : SHIPPING_COST
   const discount = discountApplied?.amount || 0
   const total = Math.max(0, subtotal - discount + shipping)
-  const notes = typeof window !== 'undefined' ? localStorage.getItem('order_notes') || '' : ''
 
   const handleApplyDiscount = async () => {
     if (!discountCode.trim()) return
@@ -99,6 +96,7 @@ export default function CheckoutPage() {
 
     setLoading(true)
     try {
+      const notes = localStorage.getItem('order_notes') || ''
       const res = await fetch('/api/create-checkout', {
         method: 'POST',
         headers: {

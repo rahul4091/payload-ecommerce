@@ -8,9 +8,11 @@ const Reviews: CollectionConfig = {
   access: {
     read: () => true,
     create: ({ req }) => !!req.user,
-    update: ({ req, id }) => {
-      if (req.user?.role === 'admin') return true
-      return req.user?.id === id
+    update: ({ req }) => {
+      if (!req.user) return false
+      if (req.user.role === 'admin') return true
+      // Return a Where constraint so users can only update their own reviews
+      return { user: { equals: req.user.id } }
     },
     delete: ({ req }) => req.user?.role === 'admin',
   },

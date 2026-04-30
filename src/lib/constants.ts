@@ -1,5 +1,8 @@
 export const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'
 
+export const SHIPPING_THRESHOLD = 500
+export const SHIPPING_COST = 49
+
 export function getImageUrl(url: string | undefined | null): string {
   if (!url) return ''
 

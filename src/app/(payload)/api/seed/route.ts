@@ -2,6 +2,13 @@ import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 
+export async function GET() {
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Seed route is disabled in production' }, { status: 404 })
+  }
+  return _seedHandler()
+}
+
 async function uploadImage(payload: any, imageUrl: string, name: string, index: number) {
   try {
     const imageRes = await fetch(imageUrl)
@@ -50,7 +57,7 @@ async function productExists(payload: any, name: string) {
   return existing.docs.length > 0
 }
 
-export async function GET() {
+async function _seedHandler() {
   const payload = await getPayload({ config })
   let totalCreated = 0
   const results: any = {}

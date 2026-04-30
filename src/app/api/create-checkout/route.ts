@@ -2,9 +2,7 @@ import { NextRequest } from 'next/server'
 import configPromise from '@payload-config'
 import { getPayload } from 'payload'
 import DodoPayments from 'dodopayments'
-
-const SHIPPING_THRESHOLD = 500
-const SHIPPING_COST = 49
+import { SHIPPING_THRESHOLD, SHIPPING_COST } from '@/lib/constants'
 
 export async function POST(req: NextRequest) {
   try {

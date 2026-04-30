@@ -20,6 +20,10 @@ import Discounts from './collections/Discounts'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
+if (process.env.NODE_ENV === 'production' && !process.env.PAYLOAD_SECRET) {
+  throw new Error('PAYLOAD_SECRET environment variable is required in production')
+}
+
 export default buildConfig({
   serverURL: process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000',
   cors: [
@@ -27,14 +31,14 @@ export default buildConfig({
     'http://localhost:5173',
     'https://payload-ecommerce-eight.vercel.app',
     'https://payload-ecommerce-rahuls-projects-db206c04.vercel.app',
-    /https:\/\/payload-ecommerce.*\.vercel\.app/,  // ✅ covers all preview deployments
+    /^https:\/\/payload-ecommerce-[\w-]+\.vercel\.app$/,
   ],
   csrf: [
     'http://localhost:3000',
     'http://localhost:5173',
     'https://payload-ecommerce-eight.vercel.app',
     'https://payload-ecommerce-rahuls-projects-db206c04.vercel.app',
-    /https:\/\/payload-ecommerce.*\.vercel\.app/,  // ✅ covers all preview deployments
+    /^https:\/\/payload-ecommerce-[\w-]+\.vercel\.app$/,
   ],
   admin: {
     user: Users.slug,
@@ -61,7 +65,7 @@ export default buildConfig({
     : {}),
 collections: [Users, Media, Products, Categories, Customers, Orders, Reviews, Wishlists, Discounts],
   editor: lexicalEditor(),
-  secret: process.env.PAYLOAD_SECRET || '',
+  secret: process.env.PAYLOAD_SECRET || 'dev-secret-change-in-production',
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },

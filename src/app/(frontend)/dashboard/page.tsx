@@ -42,32 +42,43 @@ export default function DashboardPage() {
   }, [])
 
   const fetchStats = async (token: string) => {
+    const headers = { Authorization: `JWT ${token}` }
     try {
-      const [ordersRes, productsRes] = await Promise.all([
-        fetch('/api/orders?limit=100&depth=1&sort=-createdAt', { headers: { Authorization: `JWT ${token}` } }),
-        fetch('/api/products?limit=100&depth=0', { headers: { Authorization: `JWT ${token}` } }),
+      // Use the summary endpoint for aggregated stats to avoid pulling all order documents.
+      // Fetch only the 20 most recent orders for the table + top-products chart.
+      const [summaryRes, recentOrdersRes] = await Promise.all([
+        fetch('/api/orders/summary', { headers }),
+        fetch('/api/orders?limit=20&depth=2&sort=-createdAt', { headers }),
       ])
 
-      const ordersData = await ordersRes.json()
-      const productsData = await productsRes.json()
-      const orders: any[] = ordersData.docs || []
+      const summary = await summaryRes.json()
+      const recentData = await recentOrdersRes.json()
+      const recentOrders: any[] = recentData.docs || []
 
-      const totalRevenue = orders
-        .filter((o: any) => o.status !== 'cancelled')
-        .reduce((sum: number, o: any) => sum + (o.total || 0), 0)
-
-      const countByStatus = (s: string) => orders.filter((o: any) => o.status === s).length
-
-      // Top products by order count
+      // Build top products from items array (preferred) falling back to legacy products field
       const productCount: Record<string, { name: string; count: number; price: number }> = {}
-      orders.forEach((o: any) => {
-        ;(o.products || []).forEach((p: any) => {
-          const id = typeof p === 'string' ? p : p.id
-          const name = typeof p === 'object' ? p.name : id
-          const price = typeof p === 'object' ? p.price : 0
-          if (!productCount[id]) productCount[id] = { name, count: 0, price }
-          productCount[id].count++
-        })
+      recentOrders.forEach((o: any) => {
+        const items: any[] = o.items?.length > 0 ? o.items : []
+        if (items.length > 0) {
+          items.forEach((item: any) => {
+            const p = item.product
+            const id = typeof p === 'string' ? p : p?.id
+            if (!id) return
+            const name = typeof p === 'object' ? p?.name : id
+            const price = item.price || (typeof p === 'object' ? p?.price : 0)
+            if (!productCount[id]) productCount[id] = { name, count: 0, price }
+            productCount[id].count += item.quantity || 1
+          })
+        } else {
+          ;(o.products || []).forEach((p: any) => {
+            const id = typeof p === 'string' ? p : p?.id
+            if (!id) return
+            const name = typeof p === 'object' ? p?.name : id
+            const price = typeof p === 'object' ? p?.price : 0
+            if (!productCount[id]) productCount[id] = { name, count: 0, price }
+            productCount[id].count++
+          })
+        }
       })
 
       const topProducts = Object.entries(productCount)
@@ -76,14 +87,14 @@ export default function DashboardPage() {
         .map(([id, val]) => ({ id, ...val }))
 
       setStats({
-        totalOrders: orders.length,
-        totalRevenue,
-        pendingOrders: countByStatus('pending') + countByStatus('pending_payment'),
-        processingOrders: countByStatus('processing'),
-        shippedOrders: countByStatus('shipped'),
-        deliveredOrders: countByStatus('delivered'),
-        cancelledOrders: countByStatus('cancelled'),
-        recentOrders: orders.slice(0, 10),
+        totalOrders: summary.totalOrders ?? 0,
+        totalRevenue: summary.totalRevenue ?? 0,
+        pendingOrders: (summary.byStatus?.pending ?? 0) + (summary.byStatus?.pending_payment ?? 0),
+        processingOrders: summary.byStatus?.processing ?? 0,
+        shippedOrders: summary.byStatus?.shipped ?? 0,
+        deliveredOrders: summary.byStatus?.delivered ?? 0,
+        cancelledOrders: summary.byStatus?.cancelled ?? 0,
+        recentOrders,
         topProducts,
       })
     } catch (e) {
